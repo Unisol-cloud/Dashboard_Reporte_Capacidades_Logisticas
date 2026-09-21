@@ -12,20 +12,18 @@ Visualizacion en tiempo real conectada directamente a PostgreSQL OMS y AS400.
 
 import streamlit as st
 import requests
-import streamlit as st
 import os
 
 @st.cache_data(show_spinner=False, ttl=60)
 def descargar_datos():
     if "GITHUB_TOKEN" not in st.secrets:
-        st.warning("Falta GITHUB_TOKEN en los Secrets. Asegúrate de configurarlo para leer los datos privados.")
+        st.warning("Falta GITHUB_TOKEN en los Secrets de Streamlit.")
         return
     token = st.secrets["GITHUB_TOKEN"]
     headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
     repo_owner = "Unisol-cloud"
     repo_name = "Dashboard_Datos"
     branch = "master"
-    
     archivos = [
         "cotas_ddc.parquet", "cotas_dvh.parquet", "cotas_mkp.parquet",
         "cota_courier_mkp.parquet", "cota_tamano.parquet", "dia_entrega_dvh.parquet",
@@ -33,9 +31,7 @@ def descargar_datos():
         "lead_time_sellers.parquet", "lead_time_skus.parquet", "resumen_cotas.parquet",
         "ultima_actualizacion.txt"
     ]
-    
     os.makedirs("datos_cache", exist_ok=True)
-    
     for archivo in archivos:
         url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{branch}/datos_cache/{archivo}"
         resp = requests.get(url, headers=headers)
@@ -43,7 +39,7 @@ def descargar_datos():
             with open(f"datos_cache/{archivo}", "wb") as f:
                 f.write(resp.content)
         else:
-            st.error(f"Fallo al descargar {archivo}. Código: {resp.status_code}. Revisa el TOKEN.")
+            st.error(f"Error descargando {archivo}: HTTP {resp.status_code}")
 
 descargar_datos()
 
@@ -194,9 +190,11 @@ pagina = st.sidebar.radio(
 
 
 
-if st.sidebar.button("🔄 Refrescar Caché", use_container_width=True):
+if st.sidebar.button("🔄 Refrescar Cache", use_container_width=True):
     st.cache_data.clear()
-    st.success("✅ Caché visual limpia.")
+    st.success("Cache limpia. Recargando datos...")
+    st.rerun()
+
 
 # ============================================================
 
