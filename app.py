@@ -158,14 +158,6 @@ pagina = st.sidebar.radio(
 
 
 
-        except subprocess.CalledProcessError as e:
-
-            st.sidebar.error("Error: Â¿EstÃ¡s conectado a la VPN?")
-
-
-
-
-
 # ============================================================
 
 # Utilidad: Generar Excel descargable
@@ -1532,5 +1524,6 @@ st.sidebar.caption("ðŸ”’ Conexiones en modo solo lectura")
 st.sidebar.caption("ðŸ“¡ PostgreSQL OMS | AS400 sistemdb")
 
 st.sidebar.caption("Datos actualizados cada hora (cache)")
+
 
 
