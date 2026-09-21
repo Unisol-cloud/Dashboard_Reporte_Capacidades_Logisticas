@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 
@@ -28,7 +28,7 @@ st.set_page_config(
 
     page_title="Capacidades Logisticas",
 
-    page_icon="ðŸ“¦",
+    page_icon="📦",
 
     layout="wide",
 
@@ -126,29 +126,29 @@ pagina = st.sidebar.radio(
 
     [
 
-        "ðŸŽ¯ Resumen",
+        "🎯 Resumen",
 
-        "ðŸ“Š Cotas DDC",
+        "📊 Cotas DDC",
 
-        "ðŸ“Š Cotas DVH",
+        "📊 Cotas DVH",
 
-        "ðŸ“… Dia Entrega DVH",
+        "📅 Dia Entrega DVH",
 
-        "ðŸ“Š Cotas MKP Seller",
+        "📊 Cotas MKP Seller",
 
-        "ðŸ“¦ Cota Recepcion DVH",
+        "📦 Cota Recepcion DVH",
 
-        "ðŸšš Cota Courier MKP",
+        "🚚 Cota Courier MKP",
 
-        "â± Lead Time SKU VeV",
+        "⏱ Lead Time SKU VeV",
 
-        "ðŸ“… Frecuencia DDC",
+        "📅 Frecuencia DDC",
 
-        "ðŸª Lead Time Sellers",
+        "🏪 Lead Time Sellers",
 
-        "ðŸ“ LT Localidad Sellers",
+        "📍 LT Localidad Sellers",
 
-        "ðŸ›µ Ultima Milla MKP",
+        "🛵 Ultima Milla MKP",
 
     ],
 
@@ -157,6 +157,10 @@ pagina = st.sidebar.radio(
 )
 
 
+
+if st.sidebar.button("🔄 Refrescar Caché", use_container_width=True):
+    st.cache_data.clear()
+    st.success("✅ Caché visual limpia.")
 
 # ============================================================
 
@@ -189,7 +193,7 @@ def boton_descarga(df: pd.DataFrame, nombre: str, key: str):
 
     st.download_button(
 
-        label="ðŸ“¥ Descargar Excel",
+        label="📥 Descargar Excel",
 
         data=excel_data,
 
@@ -206,7 +210,7 @@ def boton_descarga(df: pd.DataFrame, nombre: str, key: str):
 
 
 def crear_tabla_dinamica_tamano(df: pd.DataFrame) -> pd.DataFrame:
-    """Crea tabla dinamica tipo pivot con semaforo de colores para recepcion por tamaÃ±o."""
+    """Crea tabla dinamica tipo pivot con semaforo de colores para recepcion por tamaño."""
     if df.empty: return df
     df_base = df.copy()
     
@@ -221,8 +225,8 @@ def crear_tabla_dinamica_tamano(df: pd.DataFrame) -> pd.DataFrame:
     df_base = df_base.dropna(subset=['Fecha Recepcion'])
     
     dias_es = {
-        0: 'Lunes', 1: 'Martes', 2: 'MiÃ©rcoles', 3: 'Jueves',
-        4: 'Viernes', 5: 'SÃ¡bado', 6: 'Domingo'
+        0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves',
+        4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
     }
     df_base['Nombre_Dia'] = df_base['Fecha Recepcion'].dt.dayofweek.map(dias_es)
     
@@ -284,7 +288,7 @@ def crear_tabla_dinamica_tamano(df: pd.DataFrame) -> pd.DataFrame:
     pivot[('Totales', 'Total Consumo')] = totales['Total Consumo']
     pivot[('Totales', 'Total % Consumido')] = totales['Total % Consumido']
     
-    pivot.columns.names = ['TamaÃ±o / Totales', 'MÃ©trica']
+    pivot.columns.names = ['Tamaño / Totales', 'Métrica']
     
     return pivot
 
@@ -460,9 +464,9 @@ def crear_tabla_frecuencia_dias(df: pd.DataFrame, col_fila: str, col_dia: str) -
 
     day_map = {
 
-        'Lunes': 'Lun', 'Martes': 'Mar', 'MiÃ©rcoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
+        'Lunes': 'Lun', 'Martes': 'Mar', 'Miércoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
 
-        'Viernes': 'Vie', 'SÃ¡bado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
+        'Viernes': 'Vie', 'Sábado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
 
         'Monday': 'Lun', 'Tuesday': 'Mar', 'Wednesday': 'Mie', 'Thursday': 'Jue',
 
@@ -516,7 +520,7 @@ def crear_tabla_frecuencia_dias(df: pd.DataFrame, col_fila: str, col_dia: str) -
 
 def crear_tabla_dias_entrega_dvh(df: pd.DataFrame, col_fila: str, col_dia_no_laborable: str) -> pd.DataFrame:
 
-    """Crea tabla dinamica tipo pivot para Dias de Entrega DVH (LÃ³gica invertida)."""
+    """Crea tabla dinamica tipo pivot para Dias de Entrega DVH (Lógica invertida)."""
 
     if df.empty or col_fila not in df.columns or col_dia_no_laborable not in df.columns:
 
@@ -534,9 +538,9 @@ def crear_tabla_dias_entrega_dvh(df: pd.DataFrame, col_fila: str, col_dia_no_lab
 
     day_map = {
 
-        'Lunes': 'Lun', 'Martes': 'Mar', 'MiÃ©rcoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
+        'Lunes': 'Lun', 'Martes': 'Mar', 'Miércoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
 
-        'Viernes': 'Vie', 'SÃ¡bado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
+        'Viernes': 'Vie', 'Sábado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
 
         'Lun': 'Lun', 'Mar': 'Mar', 'Mie': 'Mie', 'Jue': 'Jue', 'Vie': 'Vie', 'Sab': 'Sab', 'Dom': 'Dom'
 
@@ -831,9 +835,9 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
 
 
-if pagina == "ðŸŽ¯ Resumen":
+if pagina == "🎯 Resumen":
 
-    st.title("ðŸŽ¯ Resumen de Capacidades Logisticas")
+    st.title("🎯 Resumen de Capacidades Logisticas")
 
     st.caption("Datos en tiempo real desde OMS PostgreSQL")
 
@@ -867,7 +871,7 @@ if pagina == "ðŸŽ¯ Resumen":
 
                 with col1:
 
-                    st.markdown("### ðŸ“¦ DDC")
+                    st.markdown("### 📦 DDC")
 
                     st.metric("Registros", f"{registros:,}")
 
@@ -881,7 +885,7 @@ if pagina == "ðŸŽ¯ Resumen":
 
                 with col2:
 
-                    st.markdown("### ðŸšš DVH")
+                    st.markdown("### 🚚 DVH")
 
                     st.metric("Registros", f"{registros:,}")
 
@@ -911,7 +915,7 @@ if pagina == "ðŸŽ¯ Resumen":
 
         st.divider()
 
-        st.subheader("ðŸ“¥ Descargar Reporte Completo en Excel")
+        st.subheader("📥 Descargar Reporte Completo en Excel")
 
         st.caption("Este archivo incluira TODA la informacion sin filtros (universo completo) para que puedas cruzarla a tu antojo en Excel.")
 
@@ -945,7 +949,7 @@ if pagina == "ðŸŽ¯ Resumen":
 
                 st.download_button(
 
-                    label="ðŸ“¥ Descargar Reporte Completo",
+                    label="📥 Descargar Reporte Completo",
 
                     data=excel_data,
 
@@ -961,13 +965,13 @@ if pagina == "ðŸŽ¯ Resumen":
 
         st.divider()
 
-        st.subheader("ðŸ”¥ Detalle de Cotas Quemadas (Igual a Hoja Resumen en Excel)")
+        st.subheader("🔥 Detalle de Cotas Quemadas (Igual a Hoja Resumen en Excel)")
 
         st.caption("A continuacion se muestra solo el detalle de los proveedores/sellers con la cota quemada. Para ver todo el universo, descarga el Excel o ve a las otras pestanas.")
 
 
 
-        tab1, tab2, tab3 = st.tabs(["ðŸ“¦ DDC Quemadas", "ðŸšš DVH Quemadas", " MKP Quemadas"])
+        tab1, tab2, tab3 = st.tabs(["📦 DDC Quemadas", "🚚 DVH Quemadas", " MKP Quemadas"])
 
 
 
@@ -1037,9 +1041,9 @@ if pagina == "ðŸŽ¯ Resumen":
 
 
 
-elif pagina == "ðŸ“Š Cotas DDC":
+elif pagina == "📊 Cotas DDC":
 
-    st.title("ðŸ“Š Cotas DDC (Despacho Desde Casa)")
+    st.title("📊 Cotas DDC (Despacho Desde Casa)")
 
     try:
 
@@ -1069,9 +1073,9 @@ elif pagina == "ðŸ“Š Cotas DDC":
 
 
 
-elif pagina == "ðŸ“Š Cotas DVH":
+elif pagina == "📊 Cotas DVH":
 
-    st.title("ðŸ“Š Cotas DVH (Despacho Venta Hites)")
+    st.title("📊 Cotas DVH (Despacho Venta Hites)")
 
     try:
 
@@ -1101,9 +1105,9 @@ elif pagina == "ðŸ“Š Cotas DVH":
 
 
 
-elif pagina == "ðŸ“Š Cotas MKP Seller":
+elif pagina == "📊 Cotas MKP Seller":
 
-    st.title("ðŸ“Š Cotas MKP (Marketplace Sellers)")
+    st.title("📊 Cotas MKP (Marketplace Sellers)")
 
     try:
 
@@ -1139,9 +1143,9 @@ elif pagina == "ðŸ“Š Cotas MKP Seller":
 
 
 
-elif pagina == "ðŸ“… Dia Entrega DVH":
+elif pagina == "📅 Dia Entrega DVH":
 
-    st.title("ðŸ“… Dia Entrega DVH")
+    st.title("📅 Dia Entrega DVH")
 
     try:
 
@@ -1169,9 +1173,9 @@ elif pagina == "ðŸ“… Dia Entrega DVH":
 
 
 
-elif pagina == "ðŸ“¦ Cota Recepcion DVH":
+elif pagina == "📦 Cota Recepcion DVH":
 
-    st.title("ðŸ“¦ Cota Recepcion DVH")
+    st.title("📦 Cota Recepcion DVH")
 
     try:
 
@@ -1205,9 +1209,9 @@ elif pagina == "ðŸ“¦ Cota Recepcion DVH":
 
 
 
-elif pagina == "ðŸšš Cota Courier MKP":
+elif pagina == "🚚 Cota Courier MKP":
 
-    st.title("ðŸšš Cota Courier MKP")
+    st.title("🚚 Cota Courier MKP")
 
     try:
 
@@ -1229,9 +1233,9 @@ elif pagina == "ðŸšš Cota Courier MKP":
 
 
 
-elif pagina == "â± Lead Time SKU VeV":
+elif pagina == "⏱ Lead Time SKU VeV":
 
-    st.title("â± Lead Time SKU - Venta en Verde")
+    st.title("⏱ Lead Time SKU - Venta en Verde")
 
     st.caption("Esta consulta cruza con AS400 TOPART y puede tardar unos segundos la primera vez.")
 
@@ -1249,7 +1253,7 @@ elif pagina == "â± Lead Time SKU VeV":
 
                 break
 
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["ðŸ“Š Promedio por Proveedor", "ðŸ“Š LT > 35 DÃ­as", "ðŸ“Š Prov. Sin Stock", "ðŸ“Š Inactivos Con Stock", "ðŸ“„ Base de Datos"])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Promedio por Proveedor", "📊 LT > 35 Días", "📊 Prov. Sin Stock", "📊 Inactivos Con Stock", "📄 Base de Datos"])
         
         with tab1:
             st.subheader("Lead Time Promedio por Proveedor Activo")
@@ -1283,7 +1287,7 @@ elif pagina == "â± Lead Time SKU VeV":
                 st.warning("No hay datos que coincidan con los filtros para esta tabla.")
                 
         with tab2:
-            st.subheader("Proveedores Activos con LT > 35 DÃ­as")
+            st.subheader("Proveedores Activos con LT > 35 Días")
             st.caption("Filtros aplicados: Tipo='Venta En Verde', Estado Proveedor='Activo', Estado SKU='Habilitado', LT Mayor 35 Dias='LT Mayor a 35 Dias'")
             
             mask2 = (
@@ -1312,7 +1316,7 @@ elif pagina == "â± Lead Time SKU VeV":
                 st.dataframe(pivot_2, use_container_width=True, height=500)
                 boton_descarga(pivot_2, "LT_Mayor_35_Dias", "dl_lt_35_dias")
             else:
-                st.warning("No hay datos que coincidan con los filtros para esta tabla (Â¡Ninguno superÃ³ los 35 dÃ­as!).")
+                st.warning("No hay datos que coincidan con los filtros para esta tabla (¡Ninguno superó los 35 días!).")
                 
         with tab3:
             st.subheader("Proveedores Activos con todos sus SKU's sin Stock")
@@ -1389,14 +1393,14 @@ elif pagina == "â± Lead Time SKU VeV":
 
 
 
-elif pagina == "ðŸ“… Frecuencia DDC":
+elif pagina == "📅 Frecuencia DDC":
 
-    st.title("ðŸ“… Frecuencia de Proveedores DDC")
+    st.title("📅 Frecuencia de Proveedores DDC")
 
     try:
 
         df = obtener_frecuencia_ddc()
-        # Normalizar nombre de columna Region si no existe explÃ­citamente
+        # Normalizar nombre de columna Region si no existe explícitamente
         if "Region" not in df.columns:
             for col in df.columns:
                 if "regi" in col.lower() and "id" not in col.lower():
@@ -1422,9 +1426,9 @@ elif pagina == "ðŸ“… Frecuencia DDC":
 
 
 
-elif pagina == "ðŸª Lead Time Sellers":
+elif pagina == "🏪 Lead Time Sellers":
 
-    st.title("ðŸª Lead Time Sellers MKP")
+    st.title("🏪 Lead Time Sellers MKP")
 
     try:
         df = obtener_lead_time_sellers()
@@ -1443,13 +1447,13 @@ elif pagina == "ðŸª Lead Time Sellers":
 
 
 
-elif pagina == "ðŸ“ LT Localidad Sellers":
+elif pagina == "📍 LT Localidad Sellers":
 
-    st.title("ðŸ“ LeadTime por Localidad Destino - Sellers MKP")
+    st.title("📍 LeadTime por Localidad Destino - Sellers MKP")
 
     try:
         df = obtener_leadtime_localidad_sellers()
-        tab1, tab2 = st.tabs(["ðŸ“Š Vista Tabular", "ðŸ“„ Base de Datos"])
+        tab1, tab2 = st.tabs(["📊 Vista Tabular", "📄 Base de Datos"])
         
         with tab1:
             mostrar_tabla_filtrada(
@@ -1470,9 +1474,9 @@ elif pagina == "ðŸ“ LT Localidad Sellers":
 
 
 
-elif pagina == "ðŸ›µ Ultima Milla MKP":
+elif pagina == "🛵 Ultima Milla MKP":
 
-    st.title("ðŸ›µ Ultima Milla MKP - Estado Courier")
+    st.title("🛵 Ultima Milla MKP - Estado Courier")
 
     try:
         df = obtener_estado_courier_mkp()
@@ -1481,14 +1485,14 @@ elif pagina == "ðŸ›µ Ultima Milla MKP":
         if 'R' in df.columns:
             df = df[df['R'] == 1]
             
-        # Normalizar nombre de columna Region si no existe explÃ­citamente
+        # Normalizar nombre de columna Region si no existe explícitamente
         if "Region" not in df.columns:
             for col in df.columns:
                 if "regi" in col.lower() and "id" not in col.lower() and col != "Region Destino":
                     df.rename(columns={col: "Region"}, inplace=True)
                     break
         
-        tab1, tab2 = st.tabs(["ðŸ“Š Vista Agrupada", "ðŸ“„ Base de Datos"])
+        tab1, tab2 = st.tabs(["📊 Vista Agrupada", "📄 Base de Datos"])
         
         with tab1:
             mostrar_tabla_filtrada(
@@ -1519,11 +1523,9 @@ elif pagina == "ðŸ›µ Ultima Milla MKP":
 
 st.sidebar.divider()
 
-st.sidebar.caption("ðŸ”’ Conexiones en modo solo lectura")
+st.sidebar.caption("🔒 Conexiones en modo solo lectura")
 
-st.sidebar.caption("ðŸ“¡ PostgreSQL OMS | AS400 sistemdb")
+st.sidebar.caption("📡 PostgreSQL OMS | AS400 sistemdb")
 
 st.sidebar.caption("Datos actualizados cada hora (cache)")
-
-
 
