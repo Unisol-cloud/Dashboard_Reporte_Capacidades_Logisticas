@@ -1077,7 +1077,7 @@ if pagina == "🎯 Resumen":
 
 elif pagina == "📊 Cotas DDC":
 
-    st.title("📊 Cotas DDC (Despacho Desde Casa)")
+    st.title("📊 Cotas DDC (Despacho Directo a Cliente)")
 
     try:
 
@@ -1109,7 +1109,7 @@ elif pagina == "📊 Cotas DDC":
 
 elif pagina == "📊 Cotas DVH":
 
-    st.title("📊 Cotas DVH (Despacho Venta Hites)")
+    st.title("📊 Cotas DVH (Despacho Vía Hites)")
 
     try:
 
