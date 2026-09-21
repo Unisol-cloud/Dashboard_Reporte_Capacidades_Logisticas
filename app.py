@@ -11,6 +11,40 @@ Visualizacion en tiempo real conectada directamente a PostgreSQL OMS y AS400.
 
 
 import streamlit as st
+import requests
+import streamlit as st
+import os
+
+@st.cache_data(show_spinner=False, ttl=60) # Actualiza cada 60s si cambia
+def descargar_datos():
+    if "GITHUB_TOKEN" not in st.secrets:
+        st.warning("Falta GITHUB_TOKEN en los Secrets. Asegúrate de configurarlo para leer los datos privados.")
+        return
+    token = st.secrets["GITHUB_TOKEN"]
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
+    repo_owner = "Unisol-cloud"
+    repo_name = "Dashboard_Datos"
+    branch = "master"
+    
+    archivos = [
+        "cotas_ddc.parquet", "cotas_dvh.parquet", "cotas_mkp.parquet",
+        "cota_courier_mkp.parquet", "cota_tamano.parquet", "dia_entrega_dvh.parquet",
+        "estado_courier_mkp.parquet", "frecuencia_ddc.parquet", "leadtime_localidad_sellers.parquet",
+        "lead_time_sellers.parquet", "lead_time_skus.parquet", "resumen_cotas.parquet",
+        "ultima_actualizacion.txt"
+    ]
+    
+    os.makedirs("datos_cache", exist_ok=True)
+    
+    for archivo in archivos:
+        url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{branch}/datos_cache/{archivo}"
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200:
+            with open(f"datos_cache/{archivo}", "wb") as f:
+                f.write(resp.content)
+
+descargar_datos()
+
 
 import pandas as pd
 
