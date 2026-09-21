@@ -39,7 +39,11 @@ def descargar_datos():
     for archivo in archivos:
         url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{branch}/datos_cache/{archivo}"
         resp = requests.get(url, headers=headers)
-        if resp.status_code == 200:`n            with open(f"datos_cache/{archivo}", "wb") as f:`n                f.write(resp.content)`n        else:`n            st.error(f"Fallo al descargar {archivo}. Código: {resp.status_code}. Revisa que el TOKEN sea correcto y tenga permisos repo.")
+        if resp.status_code == 200:
+            with open(f"datos_cache/{archivo}", "wb") as f:
+                f.write(resp.content)
+        else:
+            st.error(f"Fallo al descargar {archivo}. Código: {resp.status_code}. Revisa que el TOKEN sea correcto y tenga permisos repo.")
 
 descargar_datos()
 
