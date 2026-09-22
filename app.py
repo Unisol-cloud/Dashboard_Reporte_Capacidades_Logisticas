@@ -300,7 +300,6 @@ st.sidebar.markdown(f"🕐 **Datos al:** {fecha_act}")
 
 
 
-# Grupos de vistas
 grupos_vistas = {
     "🌐 Visión Global": [
         "🎯 Resumen"
@@ -339,6 +338,720 @@ pagina = st.sidebar.radio(
     "Vistas Disponibles",
     vistas_del_area
 )
+
+
+
+if st.sidebar.button("🔄 Refrescar Datos", use_container_width=True):
+    st.cache_data.clear()
+    st.success("Cache limpia. Recargando datos...")
+    st.rerun()
+
+
+# ============================================================
+
+# Utilidad: Generar Excel descargable
+
+# ============================================================
+
+import re
+
+def generar_excel(dataframes: dict) -> bytes:
+    """Genera un archivo Excel con múltiples hojas y formato corporativo Hites."""
+    from openpyxl.styles import PatternFill, Font, Alignment
+    from openpyxl.utils import get_column_letter
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        for nombre_hoja, df in dataframes.items():
+            # Limpiar caracteres prohibidos en hojas de Excel
+            nombre_limpio = re.sub(r'[\\/\?\*\[\]\:]', '_', nombre_hoja)
+            nombre_limpio = nombre_limpio[:31]
+            df.to_excel(writer, sheet_name=nombre_limpio, index=False)
+            
+            # Formatear la hoja
+            worksheet = writer.sheets[nombre_limpio]
+            
+            # Colores corporativos
+            header_fill = PatternFill(start_color='152088', end_color='152088', fill_type='solid')
+            header_font = Font(color='FFFFFF', bold=True)
+            
+            # Cabeceras
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Congelar paneles y autofiltro
+            worksheet.freeze_panes = 'A2'
+            max_col_letter = get_column_letter(worksheet.max_column)
+            worksheet.auto_filter.ref = f"A1:{max_col_letter}{worksheet.max_row}"
+            
+            # Auto-ajuste de ancho de columnas
+            for col in worksheet.columns:
+                max_length = 0
+                column_letter = col[0].column_letter
+                for cell in col:
+                    try:
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                    except:
+                        pass
+                # Ancho mínimo de 10, máximo de 50
+                adjusted_width = min(max(max_length + 2, 10), 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+                
+    return output.getvalue()
+
+
+def boton_descarga(df: pd.DataFrame, nombre: str, key: str):
+
+    """Muestra un boton de descarga de Excel para un DataFrame."""
+
+    excel_data = generar_excel({nombre: df})
+
+    st.download_button(
+
+        label="📥 Descargar Excel",
+
+        data=excel_data,
+
+        file_name=f"{nombre}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+        key=key,
+
+    )
+
+
+
+
+
+def crear_tabla_dinamica_tamano(df: pd.DataFrame) -> pd.DataFrame:
+    """Crea tabla dinamica tipo pivot con semaforo de colores para recepcion por tamaño."""
+    if df.empty: return df
+    df_base = df.copy()
+    
+    if "Cota Inicial" in df_base.columns:
+        df_base.rename(columns={"Cota Inicial": "Cota"}, inplace=True)
+    if "Fecha Ingreso CD" in df_base.columns:
+        df_base.rename(columns={"Fecha Ingreso CD": "Fecha Recepcion"}, inplace=True)
+        
+    df_base['Cota'] = pd.to_numeric(df_base['Cota'], errors='coerce').fillna(0)
+    df_base['Cota Acumulada'] = pd.to_numeric(df_base['Cota Acumulada'], errors='coerce').fillna(0)
+    df_base['Fecha Recepcion'] = pd.to_datetime(df_base['Fecha Recepcion'], errors='coerce')
+    df_base = df_base.dropna(subset=['Fecha Recepcion'])
+    
+    dias_es = {
+        0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves',
+        4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
+    }
+    df_base['Nombre_Dia'] = df_base['Fecha Recepcion'].dt.dayofweek.map(dias_es)
+    
+    df_base['Fecha_Dia'] = df_base['Fecha Recepcion'].dt.strftime('%d-%m-%Y') + " " + df_base['Nombre_Dia']
+    
+    fechas_ordenadas = df_base[['Fecha Recepcion', 'Fecha_Dia']].drop_duplicates().sort_values('Fecha Recepcion')
+    df_base['Fecha_Dia'] = pd.Categorical(df_base['Fecha_Dia'], categories=fechas_ordenadas['Fecha_Dia'], ordered=True)
+    
+    agrupado = df_base.groupby(['Fecha_Dia', 'Tamano'])[['Cota', 'Cota Acumulada']].sum().reset_index()
+    
+    agrupado['pct_num'] = agrupado.apply(
+        lambda x: x['Cota Acumulada'] / x['Cota'] * 100 if x['Cota'] > 0 else 0, axis=1
+    )
+    
+    def aplicar_semaforo(pct):
+        if pct >= 100:
+            return "\U0001f534 {:.0f}%".format(pct)
+        elif pct >= 75:
+            return "\U0001f7e0 {:.0f}%".format(pct)
+        else:
+            return "\U0001f7e2 {:.0f}%".format(pct)
+            
+    agrupado['% Consumido'] = agrupado['pct_num'].apply(aplicar_semaforo)
+    agrupado.rename(columns={'Cota Acumulada': 'Consumo'}, inplace=True)
+    
+    agrupado['Cota'] = agrupado['Cota'].astype(int).astype(str)
+    agrupado['Consumo'] = agrupado['Consumo'].astype(int).astype(str)
+    
+    pivot = agrupado.pivot_table(
+        index='Fecha_Dia',
+        columns='Tamano',
+        values=['Cota', 'Consumo', '% Consumido'],
+        aggfunc='first'
+    )
+    
+    if pivot.empty: return pivot
+    
+    pivot = pivot.reorder_levels([1, 0], axis=1)
+    
+    tamanos = ['L', 'M', 'S']
+    cols_existentes = [t for t in tamanos if t in pivot.columns.get_level_values(0)]
+    metricas = ['Cota', 'Consumo', '% Consumido']
+    
+    multi_cols = pd.MultiIndex.from_product([cols_existentes, metricas], names=['Tamano', 'Metrica'])
+    pivot = pivot.reindex(multi_cols, axis=1).fillna("")
+    
+    totales = df_base.groupby('Fecha_Dia')[['Cota', 'Cota Acumulada']].sum().reset_index()
+    totales['pct_num'] = totales.apply(
+        lambda x: x['Cota Acumulada'] / x['Cota'] * 100 if x['Cota'] > 0 else 0, axis=1
+    )
+    totales['Total % Consumido'] = totales['pct_num'].apply(aplicar_semaforo)
+    totales.rename(columns={'Cota': 'Total Cota', 'Cota Acumulada': 'Total Consumo'}, inplace=True)
+    totales['Total Cota'] = totales['Total Cota'].astype(int).astype(str)
+    totales['Total Consumo'] = totales['Total Consumo'].astype(int).astype(str)
+    
+    totales = totales.set_index('Fecha_Dia')
+    
+    pivot[('Totales', 'Total Cota')] = totales['Total Cota']
+    pivot[('Totales', 'Total Consumo')] = totales['Total Consumo']
+    pivot[('Totales', 'Total % Consumido')] = totales['Total % Consumido']
+    
+    pivot.columns.names = ['Tamaño / Totales', 'Métrica']
+    
+    return pivot
+
+def crear_tabla_dinamica_cotas(df: pd.DataFrame, col_fecha: str, col_fila: str) -> pd.DataFrame:
+
+    """Crea tabla dinamica tipo pivot con semaforo de colores para cotas."""
+
+    if df.empty:
+
+        return df
+
+    df_base = df.copy()
+
+    if 'Cota' not in df_base.columns or 'Cota Acumulada' not in df_base.columns:
+
+        return df
+
+    df_base['Cota'] = pd.to_numeric(df_base['Cota'], errors='coerce').fillna(0)
+
+    df_base['Cota Acumulada'] = pd.to_numeric(df_base['Cota Acumulada'], errors='coerce').fillna(0)
+
+    if 'Dia' not in df_base.columns:
+
+        return df
+
+    if col_fecha not in df_base.columns or col_fila not in df_base.columns:
+
+        return df
+
+
+
+    # Convertir fecha a datetime para ordenamiento correcto
+
+    df_base[col_fecha] = pd.to_datetime(df_base[col_fecha], errors='coerce')
+
+    df_base = df_base.dropna(subset=[col_fecha])
+
+
+
+    # Obtener orden cronologico de fechas
+
+    fechas_ordenadas = sorted(df_base[col_fecha].unique())
+
+    # Formatear fecha como DD-MM-YYYY para display
+
+    fecha_display_map = {}
+
+    for f in fechas_ordenadas:
+
+        fecha_display_map[f] = pd.Timestamp(f).strftime('%d-%m-%Y')
+
+    fecha_display_order = [fecha_display_map[f] for f in fechas_ordenadas]
+
+
+
+    df_base['Fecha_Display'] = df_base[col_fecha].map(fecha_display_map)
+
+    df_base['Fecha_Display'] = pd.Categorical(
+
+        df_base['Fecha_Display'], categories=fecha_display_order, ordered=True
+
+    )
+
+
+
+    # Agrupar
+
+    agrupado = df_base.groupby([col_fila, 'Fecha_Display', 'Dia'])[['Cota', 'Cota Acumulada']].sum().reset_index()
+
+
+
+    # Calcular % Consumido con indicadores de color (circulos emoji)
+
+    agrupado['pct_num'] = agrupado.apply(
+
+        lambda x: x['Cota Acumulada'] / x['Cota'] * 100 if x['Cota'] > 0 else 0, axis=1
+
+    )
+
+
+
+    def aplicar_semaforo(pct):
+
+        if pct >= 100:
+
+            return "\U0001f534 {:.0f}%".format(pct)
+
+        elif pct >= 75:
+
+            return "\U0001f7e0 {:.0f}%".format(pct)
+
+        else:
+
+            return "\U0001f7e2 {:.0f}%".format(pct)
+
+
+
+    agrupado['% Consumido'] = agrupado['pct_num'].apply(aplicar_semaforo)
+
+    agrupado.rename(columns={'Cota Acumulada': 'Consumo'}, inplace=True)
+
+
+
+    # Convertir TODO a string para evitar errores de tipo mixto en el pivot
+
+    agrupado['Cota'] = agrupado['Cota'].astype(int).astype(str)
+
+    agrupado['Consumo'] = agrupado['Consumo'].astype(int).astype(str)
+
+
+
+    # Crear pivot
+
+    pivot = agrupado.pivot_table(
+
+        index=col_fila,
+
+        columns=['Fecha_Display', 'Dia'],
+
+        values=['Cota', 'Consumo', '% Consumido'],
+
+        aggfunc='first'
+
+    )
+
+    if pivot.empty:
+
+        return pivot
+
+
+
+    # Reordenar niveles: Fecha > Dia > Metrica
+
+    pivot = pivot.reorder_levels([1, 2, 0], axis=1)
+
+    pivot = pivot.sort_index(axis=1, level=[0, 1], sort_remaining=False)
+
+    # Orden de metricas: Cota, Consumo, % Consumido
+
+    pivot = pivot.reindex(['Cota', 'Consumo', '% Consumido'], level=2, axis=1)
+
+    pivot.fillna("", inplace=True)
+
+
+
+    # Renombrar nivel superior de columnas para que diga "Fechas"
+
+    pivot.columns.names = ['Fechas', 'Dia', 'Metrica']
+
+
+
+    return pivot
+
+
+
+
+
+def crear_tabla_frecuencia_dias(df: pd.DataFrame, col_fila: str, col_dia: str) -> pd.DataFrame:
+
+    """Crea tabla dinamica tipo pivot para Dias de Entrega (SI/0)."""
+
+    if df.empty or col_fila not in df.columns or col_dia not in df.columns:
+
+        return df
+
+
+
+    df_base = df.copy()
+
+    
+
+    # Mapear dias a formato corto
+
+    day_map = {
+
+        'Lunes': 'Lun', 'Martes': 'Mar', 'Miércoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
+
+        'Viernes': 'Vie', 'Sábado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
+
+        'Monday': 'Lun', 'Tuesday': 'Mar', 'Wednesday': 'Mie', 'Thursday': 'Jue',
+
+        'Friday': 'Vie', 'Saturday': 'Sab', 'Sunday': 'Dom',
+
+        'Lun': 'Lun', 'Mar': 'Mar', 'Mie': 'Mie', 'Jue': 'Jue', 'Vie': 'Vie', 'Sab': 'Sab', 'Dom': 'Dom'
+
+    }
+
+    df_base['Dia_Corto'] = df_base[col_dia].astype(str).str.strip().map(day_map).fillna(df_base[col_dia])
+
+
+
+    agrupado = df_base.groupby([col_fila, 'Dia_Corto']).size().reset_index(name='count')
+
+    agrupado['Valor'] = agrupado['count'].apply(lambda x: "SI" if x > 0 else "0")
+
+
+
+    pivot = agrupado.pivot_table(
+
+        index=col_fila,
+
+        columns='Dia_Corto',
+
+        values='Valor',
+
+        aggfunc='first'
+
+    ).fillna("0")
+
+
+
+    # Asegurar que todas las columnas de dias existan y en orden
+
+    orden_dias = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom']
+
+    for d in orden_dias:
+
+        if d not in pivot.columns:
+
+            pivot[d] = "0"
+
+            
+
+    pivot = pivot[orden_dias]
+
+    return pivot
+
+
+
+def crear_tabla_dias_entrega_dvh(df: pd.DataFrame, col_fila: str, col_dia_no_laborable: str) -> pd.DataFrame:
+
+    """Crea tabla dinamica tipo pivot para Dias de Entrega DVH (Lógica invertida)."""
+
+    if df.empty or col_fila not in df.columns or col_dia_no_laborable not in df.columns:
+
+        return df
+
+
+
+    df_base = df.copy()
+
+    proveedores = df_base[col_fila].unique()
+
+    orden_dias = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom']
+
+    
+
+    day_map = {
+
+        'Lunes': 'Lun', 'Martes': 'Mar', 'Miércoles': 'Mie', 'Miercoles': 'Mie', 'Jueves': 'Jue',
+
+        'Viernes': 'Vie', 'Sábado': 'Sab', 'Sabado': 'Sab', 'Domingo': 'Dom',
+
+        'Lun': 'Lun', 'Mar': 'Mar', 'Mie': 'Mie', 'Jue': 'Jue', 'Vie': 'Vie', 'Sab': 'Sab', 'Dom': 'Dom'
+
+    }
+
+    
+
+    df_base['Dia_Corto'] = df_base[col_dia_no_laborable].astype(str).str.strip().map(day_map).fillna(df_base[col_dia_no_laborable])
+
+    
+
+    no_laborables_por_prov = df_base.dropna(subset=['Dia_Corto']).groupby(col_fila)['Dia_Corto'].apply(set).to_dict()
+
+    
+
+    datos = []
+
+    for prov in proveedores:
+
+        fila = {col_fila: prov}
+
+        no_lab = no_laborables_por_prov.get(prov, set())
+
+        for d in orden_dias:
+
+            if d in no_lab:
+
+                fila[d] = "0"
+
+            else:
+
+                fila[d] = "SI"
+
+        datos.append(fila)
+
+        
+
+    pivot = pd.DataFrame(datos).set_index(col_fila)
+
+    return pivot[orden_dias]
+
+
+
+
+
+
+
+def crear_tabla_dinamica_lt_localidad(df: pd.DataFrame) -> pd.DataFrame:
+    """Genera la tabla tabular (filas) de LT Localidad Sellers."""
+    df_pivot = df.copy()
+    
+    columnas_agrupacion = [
+        'ID Seller center', 'Seller', 'Region Destino', 
+        'ID Localidad', 'Localidad Destino', 'LeadTime Seller', 'LeadTime Courier'
+    ]
+    
+    # Verificar que existan las columnas
+    for col in columnas_agrupacion:
+        if col not in df_pivot.columns:
+            return df_pivot
+            
+    # Llenar nulos para no perder registros en groupby (por seguridad si pandas es < 1.1)
+    df_pivot['ID Seller center'] = df_pivot['ID Seller center'].fillna("N/A")
+    df_pivot['LeadTime Seller'] = pd.to_numeric(df_pivot['LeadTime Seller'], errors='coerce').fillna(0).astype(int)
+    df_pivot['LeadTime Courier'] = pd.to_numeric(df_pivot['LeadTime Courier'], errors='coerce').fillna(0).astype(int)
+    
+    if 'id_legacy' in df_pivot.columns:
+        df_pivot['id_legacy'] = pd.to_numeric(df_pivot['id_legacy'], errors='coerce').fillna(0)
+        pivot = df_pivot.groupby(columnas_agrupacion).agg(
+            Suma_id_legacy=('id_legacy', 'sum')
+        ).reset_index()
+        pivot.rename(columns={'Suma_id_legacy': 'Suma de id_legacy'}, inplace=True)
+    else:
+        pivot = df_pivot.groupby(columnas_agrupacion).size().reset_index(name='Conteo')
+        
+    pivot = pivot.sort_values(by=['Seller', 'Region Destino', 'ID Localidad'], ascending=[True, True, True])
+    pivot['ID Seller center'] = pivot['ID Seller center'].replace("N/A", None)
+    
+    return pivot
+
+def crear_tabla_dinamica_ultima_milla(df: pd.DataFrame) -> pd.DataFrame:
+    """Genera la tabla agrupada de Ultima Milla MKP."""
+    if 'Courier' not in df.columns or 'FA' not in df.columns or 'R' not in df.columns:
+        return df
+    
+    df_pivot = df.copy()
+    
+    # Asegurar que sean numericos
+    df_pivot['FA'] = pd.to_numeric(df_pivot['FA'], errors='coerce').fillna(0)
+    df_pivot['R'] = pd.to_numeric(df_pivot['R'], errors='coerce').fillna(0)
+    
+    pivot = df_pivot.groupby('Courier', dropna=False).agg(
+        FA_sum=('FA', 'sum'),
+        R_sum=('R', 'sum')
+    ).reset_index()
+    
+    pivot.rename(columns={
+        'Courier': 'Nombre Courier',
+        'FA_sum': 'Fuente de Abastecimiento Activa',
+        'R_sum': 'Rutas Activas'
+    }, inplace=True)
+    
+    pivot = pivot.sort_values(by='Nombre Courier', ascending=True)
+    
+    return pivot
+
+def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
+
+                           columnas_filtro: list = None, valores_por_defecto: dict = None,
+
+                           es_pivot_cotas: bool = False, col_fecha: str = None, col_fila: str = None,
+
+                           es_pivot_dias: bool = False, col_dia: str = None,
+                           es_pivot_dias_dvh: bool = False, es_pivot_tamano: bool = False,
+                           es_pivot_lt_localidad: bool = False, es_pivot_ultima_milla: bool = False):
+
+    """Muestra una tabla con filtros interactivos y boton de descarga (descarga datos sin filtrar)."""
+
+    st.subheader(titulo)
+
+
+
+    if df.empty:
+
+        st.warning("No hay datos disponibles.")
+
+        return
+
+
+
+    df_filtrado = df.copy()
+
+    if valores_por_defecto is None:
+
+        valores_por_defecto = {}
+
+
+
+    # Filtros dinamicos
+
+    if columnas_filtro:
+
+        cols = st.columns(len(columnas_filtro))
+
+        for i, col_name in enumerate(columnas_filtro):
+
+            if col_name in df_filtrado.columns:
+
+                opciones = ["Todos"] + sorted(
+
+                    [str(x) for x in df_filtrado[col_name].dropna().unique().tolist()]
+
+                )
+
+
+
+                # Seleccionar valor por defecto si existe
+
+                default_idx = 0
+
+                if col_name in valores_por_defecto and str(valores_por_defecto[col_name]) in opciones:
+
+                    default_idx = opciones.index(str(valores_por_defecto[col_name]))
+
+
+
+                with cols[i]:
+
+                    seleccion = st.selectbox(
+
+                        col_name,
+
+                        opciones,
+
+                        index=default_idx,
+
+                        key=f"{key_prefix}_{col_name}",
+
+                    )
+
+                    if seleccion != "Todos":
+
+                        df_filtrado = df_filtrado[df_filtrado[col_name].astype(str) == seleccion]
+
+
+
+    # Metricas rapidas
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Total Registros (Vista)", f"{len(df_filtrado):,}")
+
+    if "Cota" in df_filtrado.columns:
+
+        try:
+
+            col2.metric("Suma Cota (Vista)", f"{pd.to_numeric(df_filtrado['Cota'], errors='coerce').sum():,.0f}")
+
+        except Exception:
+
+            pass
+
+    elif "Cota Inicial" in df_filtrado.columns:
+
+        try:
+
+            col2.metric("Suma Cota Inicial (Vista)", f"{pd.to_numeric(df_filtrado['Cota Inicial'], errors='coerce').sum():,.0f}")
+
+        except Exception:
+
+            pass
+
+    if "Cota Quemada" in df_filtrado.columns:
+
+        quemadas = (df_filtrado["Cota Quemada"] == "Cota Quemada").sum()
+
+        col3.metric("Cotas Quemadas (Vista)", f"{quemadas:,}")
+
+
+
+    # Tabla
+
+    if es_pivot_cotas and col_fecha and col_fila:
+
+        df_mostrar = crear_tabla_dinamica_cotas(df_filtrado, col_fecha, col_fila)
+
+        st.dataframe(df_mostrar, use_container_width=True, height=500)
+
+    elif es_pivot_dias_dvh and col_fila and col_dia:
+
+        df_mostrar = crear_tabla_dias_entrega_dvh(df_filtrado, col_fila, col_dia)
+
+        
+
+        def estilo_celda(val):
+
+            if val == "SI":
+
+                return 'background-color: #bcebc3; color: black'
+
+            elif val == "0":
+
+                return 'background-color: #ffcccc; color: black'
+
+            return ''
+
+        
+
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True, height=500)
+
+    elif es_pivot_dias and col_fila and col_dia:
+        df_mostrar = crear_tabla_frecuencia_dias(df_filtrado, col_fila, col_dia)
+        
+        def estilo_celda(val):
+            if val == "SI":
+                return 'background-color: #bcebc3; color: black'
+            elif val == "0":
+                return 'background-color: #ffcccc; color: black'
+            return ''
+        
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True, height=500)
+    elif es_pivot_tamano:
+        df_mostrar = crear_tabla_dinamica_tamano(df_filtrado)
+        st.dataframe(df_mostrar, use_container_width=True, height=500)
+    elif es_pivot_lt_localidad:
+        df_mostrar = crear_tabla_dinamica_lt_localidad(df_filtrado)
+        st.dataframe(df_mostrar, use_container_width=True, height=500)
+    elif es_pivot_ultima_milla:
+        df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
+        st.dataframe(df_mostrar, use_container_width=True, height=500)
+    else:
+
+        df_mostrar = df_filtrado
+
+        st.dataframe(df_mostrar, use_container_width=True, height=500)
+
+
+
+    # Descarga (siempre descarga el DF original completo, sin filtros)
+
+    boton_descarga(df, titulo.replace(" ", "_") + "_Completo", f"dl_{key_prefix}")
+
+
+
+
+
+# ============================================================
+
+# PAGINAS
+
+# ============================================================
+
+
 
 if pagina == "🎯 Resumen":
 
