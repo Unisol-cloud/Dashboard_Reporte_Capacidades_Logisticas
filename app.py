@@ -1177,13 +1177,92 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
 if pagina == "🎯 Resumen":
     st.markdown("<h1 style='color: #152088;'>🎯 Resumen de Capacidades Logísticas</h1>", unsafe_allow_html=True)
-    st.caption("Panel de Control (Control Tower) - Datos en tiempo real desde OMS PostgreSQL")
+    st.caption("Panel de Control (Control Tower) - Datos filtrables en tiempo real")
 
     try:
-        df_resumen = obtener_resumen_cotas()
+        # 1. Cargar bases detalladas en lugar del resumen estático
+        df_ddc = obtener_cotas_ddc()
+        df_dvh = obtener_cotas_dvh()
+        df_mkp = obtener_cotas_mkp()
+        
+        # 2. Preparar fechas
+        import datetime
+        for df_target, col in [(df_ddc, "Fecha Compromiso"), (df_dvh, "Fecha Entrega CD"), (df_mkp, "Fecha Compromiso Inicial")]:
+            if not df_target.empty and col in df_target.columns:
+                df_target[col] = pd.to_datetime(df_target[col]).dt.date
+                
+        # 3. Lista unificada de proveedores
+        proveedores = pd.concat([
+            df_ddc["Razon Social"] if not df_ddc.empty and "Razon Social" in df_ddc.columns else pd.Series(dtype=str),
+            df_dvh["Razon Social"] if not df_dvh.empty and "Razon Social" in df_dvh.columns else pd.Series(dtype=str),
+            df_mkp["Razon Social"] if not df_mkp.empty and "Razon Social" in df_mkp.columns else pd.Series(dtype=str)
+        ]).dropna().unique().tolist()
+        proveedores.sort()
+        
+        # Fechas minimas y maximas
+        todas_fechas = pd.concat([
+            df_ddc["Fecha Compromiso"] if not df_ddc.empty and "Fecha Compromiso" in df_ddc.columns else pd.Series(dtype='object'),
+            df_dvh["Fecha Entrega CD"] if not df_dvh.empty and "Fecha Entrega CD" in df_dvh.columns else pd.Series(dtype='object'),
+            df_mkp["Fecha Compromiso Inicial"] if not df_mkp.empty and "Fecha Compromiso Inicial" in df_mkp.columns else pd.Series(dtype='object')
+        ]).dropna()
+        
+        min_date = todas_fechas.min() if not todas_fechas.empty else datetime.date.today()
+        max_date = todas_fechas.max() if not todas_fechas.empty else datetime.date.today()
+        
+        # 4. Interfaz de Filtros Globales
+        with st.expander("🔍 Filtros Globales de Resumen", expanded=True):
+            f_col1, f_col2 = st.columns(2)
+            with f_col1:
+                filtro_fechas = st.date_input("Rango de Fechas", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+            with f_col2:
+                filtro_proveedores = st.multiselect("Razón Social / Proveedor (Opcional)", options=proveedores, placeholder="Todos los proveedores")
+                
+        # 5. Aplicar filtros a los DataFrames
+        def filtrar_df(df_f, col_fecha):
+            if df_f.empty: return df_f
+            res = df_f.copy()
+            if isinstance(filtro_fechas, tuple) or isinstance(filtro_fechas, list):
+                if len(filtro_fechas) == 2:
+                    res = res[(res[col_fecha] >= filtro_fechas[0]) & (res[col_fecha] <= filtro_fechas[1])]
+                elif len(filtro_fechas) == 1:
+                    res = res[res[col_fecha] == filtro_fechas[0]]
+            elif filtro_fechas:
+                res = res[res[col_fecha] == filtro_fechas]
+                
+            if filtro_proveedores:
+                res = res[res["Razon Social"].isin(filtro_proveedores)]
+            return res
+
+        df_ddc_f = filtrar_df(df_ddc, "Fecha Compromiso")
+        df_dvh_f = filtrar_df(df_dvh, "Fecha Entrega CD")
+        df_mkp_f = filtrar_df(df_mkp, "Fecha Compromiso Inicial")
+        
+        # 6. Calcular métricas para el resumen
+        def calcular_metricas(df_target, flujo):
+            if df_target.empty:
+                return {"flujo": flujo, "total_cota": 0, "total_acumulada": 0, "total_registros": 0, "cotas_quemadas": 0}
+            
+            total_cota = df_target["Cota"].sum() if "Cota" in df_target.columns else 0
+            total_acum = df_target["Cota Acumulada"].sum() if "Cota Acumulada" in df_target.columns else 0
+            registros = len(df_target)
+            
+            # Filtro inteligente de Cotas Quemadas (Ignorar cota_ini == 0)
+            if "Cota Quemada" in df_target.columns and "Cota" in df_target.columns:
+                quemadas = len(df_target[(df_target["Cota Quemada"] == "Cota Quemada") & (df_target["Cota"] > 0)])
+            else:
+                quemadas = 0
+                
+            return {"flujo": flujo, "total_cota": total_cota, "total_acumulada": total_acum, "total_registros": registros, "cotas_quemadas": quemadas}
+
+        datos_resumen = [
+            calcular_metricas(df_ddc_f, "DDC"),
+            calcular_metricas(df_dvh_f, "DVH"),
+            calcular_metricas(df_mkp_f, "MKP")
+        ]
+
         col1, col2, col3 = st.columns(3)
         
-        for _, row in df_resumen.iterrows():
+        for row in datos_resumen:
             flujo = row["flujo"]
             total = int(row["total_cota"] or 0)
             acum = int(row["total_acumulada"] or 0)
@@ -1238,6 +1317,18 @@ if pagina == "🎯 Resumen":
             elif flujo == "MKP":
                 with col3:
                     st.markdown(card_html, unsafe_allow_html=True)
+
+        # Necesitamos volver a definir df_resumen original porque el boton de descarga
+        # lo usa para exportar el resumen (es decir, df_resumen = obtener_resumen_cotas())
+        # Pero podemos recrearlo desde datos_resumen para que el excel descargado 
+        # también refleje los filtros!
+        df_resumen = pd.DataFrame([{
+            'flujo': r['flujo'],
+            'total_cota': r['total_cota'],
+            'total_acumulada': r['total_acumulada'],
+            'total_registros': r['total_registros'],
+            'cotas_quemadas': r['cotas_quemadas']
+        } for r in datos_resumen])
 
         # Boton de descarga del reporte completo
 
