@@ -242,6 +242,41 @@ st.markdown("""
     section[data-testid="stSidebar"] [data-testid="stExpander"] svg {
         fill: #ffffff !important;
     }
+    
+    /* Eliminar el fondo blanco/gris al hacer clic (Focus ring) */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details:focus,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:focus,
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details:focus-within {
+        outline: none !important;
+        box-shadow: none !important;
+        background-color: rgba(0,0,0,0) !important;
+    }
+    
+    /* Diseño Ultra-Compacto para reducir dimensiones */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] {
+        margin-bottom: 0.2rem !important; /* Margen menor entre cajas */
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+        min-height: 2rem !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stVerticalBlock"] {
+        gap: 0.1rem !important; /* Espacio casi nulo entre botones */
+        padding-bottom: 0.2rem !important;
+    }
+    /* Compactar los botones internos */
+    section[data-testid="stSidebar"] button[kind="secondary"],
+    section[data-testid="stSidebar"] button[kind="primary"] {
+        min-height: 1.8rem !important;
+        padding-top: 0.1rem !important;
+        padding-bottom: 0.1rem !important;
+        margin: 0 !important;
+        font-size: 0.85rem !important;
+    }
+
 </style>
 
 """, unsafe_allow_html=True)
