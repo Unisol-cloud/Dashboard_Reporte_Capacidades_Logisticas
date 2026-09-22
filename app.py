@@ -225,6 +225,23 @@ st.markdown("""
         font-size: 0.75rem !important;
     }
 
+    /* Estilos para los Expanders (Acordeones) */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] {
+        border-color: rgba(255,255,255,0.15) !important;
+        background-color: rgba(0,0,0,0.1) !important;
+        border-radius: 8px !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
+        color: #FF49A0 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] svg {
+        fill: #ffffff !important;
+    }
 </style>
 
 """, unsafe_allow_html=True)
@@ -350,13 +367,14 @@ if 'pagina_actual' not in st.session_state:
 
 st.sidebar.markdown("---")
 for area, vistas in grupos_vistas.items():
-    st.sidebar.markdown(f"**{area}**")
-    for vista in vistas:
-        is_active = (st.session_state.pagina_actual == vista)
-        if st.sidebar.button(vista, key=vista, type="primary" if is_active else "secondary", use_container_width=True):
-            st.session_state.pagina_actual = vista
-            st.rerun()
-    st.sidebar.markdown("<div style='margin-bottom: 10px'></div>", unsafe_allow_html=True)
+    # Expandir solo si la pagina actual pertenece a este grupo
+    is_expanded = (st.session_state.pagina_actual in vistas)
+    with st.sidebar.expander(area, expanded=is_expanded):
+        for vista in vistas:
+            is_active = (st.session_state.pagina_actual == vista)
+            if st.button(vista, key=vista, type="primary" if is_active else "secondary", use_container_width=True):
+                st.session_state.pagina_actual = vista
+                st.rerun()
 
 pagina = st.session_state.pagina_actual
 
