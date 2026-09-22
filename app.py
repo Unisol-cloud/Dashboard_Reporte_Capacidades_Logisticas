@@ -1806,6 +1806,16 @@ elif pagina == "⏱ Lead Time SKU VeV":
 
         df = obtener_lead_time_skus()
 
+        try:
+            if 'LT SKU' in df.columns:
+                st.markdown("#### 📊 Distribución de Lead Time (SKUs)")
+                df_hist = df['LT SKU'].value_counts().sort_index().reset_index()
+                df_hist.columns = ['Días de Lead Time', 'Cantidad de SKUs']
+                st.bar_chart(df_hist.set_index('Días de Lead Time'), color="#152088")
+                st.markdown("<br>", unsafe_allow_html=True)
+        except Exception:
+            pass
+            
         # Normalizar nombre de columna Seccion
 
         for col in df.columns:
@@ -1982,6 +1992,19 @@ elif pagina == "📅 Frecuencia DDC":
         columnas_visibles = ["Proveedor", "Zona Reparto", "Localidad", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom", "Suma_Dias"]
         columnas_a_ocultar = [c for c in df.columns if c not in columnas_visibles]
         
+        try:
+            if 'Suma_Dias' in df.columns and 'Proveedor' in df.columns:
+                st.markdown("#### 📊 Cobertura Semanal por Proveedor (Promedio días de entrega)")
+                df['Suma_Dias'] = pd.to_numeric(df['Suma_Dias'], errors='coerce')
+                df_prov = df.groupby('Proveedor')['Suma_Dias'].mean().reset_index()
+                df_prov = df_prov.sort_values('Suma_Dias', ascending=True).head(15)
+                df_prov.columns = ['Proveedor', 'Días Promedio (Peores 15)']
+                st.bar_chart(df_prov.set_index('Proveedor'), color="#FF49A0")
+                st.caption("Top 15 proveedores con MENOR cobertura semanal a nivel nacional.")
+                st.markdown("<br>", unsafe_allow_html=True)
+        except Exception:
+            pass
+            
         mostrar_tabla_filtrada(
             df, "Frecuencia DDC", "frec_ddc",
             columnas_filtro=["Proveedor", "Region", "Comuna", "Suma_Dias"],
@@ -2048,6 +2071,16 @@ elif pagina == "🛵 Ultima Milla MKP":
     try:
         df = obtener_estado_courier_mkp()
         
+        try:
+            if 'Courier' in df.columns:
+                st.markdown("#### 📊 Participación de Couriers (Market Share de Cobertura)")
+                df_share = df['Courier'].value_counts().reset_index()
+                df_share.columns = ['Courier', 'Cobertura Activa']
+                st.bar_chart(df_share.set_index('Courier'), color="#152088")
+                st.markdown("<br>", unsafe_allow_html=True)
+        except Exception:
+            pass
+            
         # Filtro obligatorio R = 1
         if 'R' in df.columns:
             df = df[df['R'] == 1]
