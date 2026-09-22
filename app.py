@@ -1212,10 +1212,15 @@ if pagina == "🎯 Resumen":
         # 4. Interfaz de Filtros Globales
         with st.expander("🔍 Filtros Globales de Resumen", expanded=True):
             f_col1, f_col2, f_col3 = st.columns([1, 1, 2])
+            
+            hoy = datetime.date.today()
+            # Asegurar que 'hoy' este dentro de los limites permitidos para evitar errores de Streamlit
+            val_defecto = max(min_date, min(hoy, max_date))
+            
             with f_col1:
-                fecha_desde = st.date_input("📅 Fecha Desde", value=min_date, min_value=min_date, max_value=max_date)
+                fecha_desde = st.date_input("📅 Fecha Desde", value=val_defecto, min_value=min_date, max_value=max_date)
             with f_col2:
-                fecha_hasta = st.date_input("📅 Fecha Hasta", value=max_date, min_value=min_date, max_value=max_date)
+                fecha_hasta = st.date_input("📅 Fecha Hasta", value=val_defecto, min_value=min_date, max_value=max_date)
             with f_col3:
                 filtro_proveedores = st.multiselect("🏢 Razón Social / Proveedor (Opcional)", options=proveedores, placeholder="Todos los proveedores")
                 
