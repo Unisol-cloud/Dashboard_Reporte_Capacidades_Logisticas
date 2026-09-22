@@ -1710,26 +1710,21 @@ elif pagina == "📦 Cota Recepcion DVH":
 
 
 
-elif pagina == "🚚 Cota Courier MKP":
-
-    st.title("🚚 Cota Courier MKP")
-
+elif pagina == "🧮 Cota Courier MKP":
+    st.title("🧮 Cota Courier MKP")
     try:
-
         df = obtener_cota_courier_mkp()
-
+        
+        if "Cota Inicial" in df.columns:
+            df.rename(columns={"Cota Inicial": "Cota"}, inplace=True)
+            
         mostrar_tabla_filtrada(
-
             df, "Cota Courier MKP", "courier_mkp",
-
             columnas_filtro=["Nombre Fuente Abastecimiento", "Cota Quemada", "Mes"],
-
-            valores_por_defecto={"Cota Quemada": "Cota Quemada"}
-
+            valores_por_defecto={},
+            es_pivot_cotas=True, col_fecha="Fecha Cota Entrega", col_fila="Nombre Fuente Abastecimiento"
         )
-
     except Exception as e:
-
         st.error(f"Error: {e}")
 
 
