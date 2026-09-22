@@ -981,7 +981,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
                            es_pivot_dias: bool = False, col_dia: str = None,
                            es_pivot_dias_dvh: bool = False, colorear_dias: bool = False, es_pivot_tamano: bool = False,
-                           es_pivot_lt_localidad: bool = False, es_pivot_ultima_milla: bool = False):
+                           es_pivot_lt_localidad: bool = False, es_pivot_ultima_milla: bool = False, columnas_ocultas: list = None):
 
     """Muestra una tabla con filtros interactivos y boton de descarga (descarga datos sin filtrar)."""
 
@@ -1145,7 +1145,12 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
             elif val == "0":
                 return 'background-color: #ffcccc; color: black'
             return ''
-        st.dataframe(df_filtrado.style.map(estilo_celda), use_container_width=True, hide_index=True)
+            
+        df_display = df_filtrado.copy()
+        if columnas_ocultas:
+            df_display = df_display.drop(columns=[c for c in columnas_ocultas if c in df_display.columns])
+            
+        st.dataframe(df_display.style.map(estilo_celda), use_container_width=True, hide_index=True)
     else:
 
         df_mostrar = df_filtrado
@@ -1750,11 +1755,16 @@ elif pagina == "📅 Frecuencia DDC":
         otras_columnas = [c for c in df.columns if c not in columnas_base]
         df = df[columnas_base + otras_columnas]
         
+        # Identificar las columnas que NO deben verse en la tabla (todo lo que no fue explícitamente pedido)
+        columnas_visibles = ["Proveedor", "Zona Reparto", "Localidad", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom", "Suma_Dias"]
+        columnas_a_ocultar = [c for c in df.columns if c not in columnas_visibles]
+        
         mostrar_tabla_filtrada(
             df, "Frecuencia DDC", "frec_ddc",
             columnas_filtro=["Proveedor", "Region", "Comuna", "Suma_Dias"],
             valores_por_defecto={},
-            colorear_dias=True
+            colorear_dias=True,
+            columnas_ocultas=columnas_a_ocultar
         )
 
     except Exception as e:
