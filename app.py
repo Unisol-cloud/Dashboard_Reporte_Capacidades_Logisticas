@@ -980,7 +980,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
                            es_pivot_cotas: bool = False, col_fecha: str = None, col_fila: str = None,
 
                            es_pivot_dias: bool = False, col_dia: str = None,
-                           es_pivot_dias_dvh: bool = False, es_pivot_tamano: bool = False,
+                           es_pivot_dias_dvh: bool = False, colorear_dias: bool = False, es_pivot_tamano: bool = False,
                            es_pivot_lt_localidad: bool = False, es_pivot_ultima_milla: bool = False):
 
     """Muestra una tabla con filtros interactivos y boton de descarga (descarga datos sin filtrar)."""
