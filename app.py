@@ -1202,45 +1202,32 @@ if pagina == "🎯 Resumen":
             
             def fmt(n): return f"{n:,}".replace(",", ".")
             
-            alert_html = f"""
-<div style="background: #FF3B30; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(255,59,48,0.4);">
-    🔴 {fmt(quemadas)} Cotas Quemadas
-</div>
-""" if quemadas > 0 else f"""
-<div style="background: #34C759; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(52,199,89,0.3);">
-    ✅ Operación Normal (0 Quemadas)
-</div>
-"""
+            alert_html = f"""<div style="background: #FF3B30; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(255,59,48,0.4);">🔴 {fmt(quemadas)} Cotas Quemadas</div>""" if quemadas > 0 else f"""<div style="background: #34C759; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(52,199,89,0.3);">✅ Operación Normal (0 Quemadas)</div>"""
             
-            card_html = f"""
-<div style="background: white; border-radius: 12px; box-shadow: 0 6px 16px rgba(21,32,136,0.08); overflow: hidden; margin-bottom: 20px; border: 1px solid #eef0f6;">
-    <div style="background: {header_color}; color: white; padding: 14px 20px; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;">
-        <span>{icon} {flujo}</span>
-        <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.8;">{fmt(registros)} Reg.</span>
-    </div>
-    <div style="padding: 24px;">
-        <div style="text-align: center; margin-bottom: 24px;">
-            <p style="margin: 0; color: #666; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Capacidad Total</p>
-            <h2 style="margin: 0; color: #152088; font-size: 2.8rem; font-weight: 800; line-height: 1.2;">{fmt(total)}</h2>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #444; margin-bottom: 6px;">
-            <span>Capacidad Utilizada</span>
-            <span style="color: #FF49A0;">{pct_utilizado:.0f}%</span>
-        </div>
-        <div style="background: #f0f2f8; border-radius: 10px; height: 12px; margin-bottom: 12px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="background: linear-gradient(90deg, #152088, #FF49A0); height: 100%; width: {pct_utilizado:.0f}%; border-radius: 10px; transition: width 1s ease-in-out;"></div>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #666; margin-bottom: 24px;">
-            <span>Disponible: {fmt(disponible)}</span>
-            <span>{pct_disponible:.0f}%</span>
-        </div>
-        
-        {alert_html}
-    </div>
+            card_html = f"""<div style="background: white; border-radius: 12px; box-shadow: 0 6px 16px rgba(21,32,136,0.08); overflow: hidden; margin-bottom: 20px; border: 1px solid #eef0f6;">
+<div style="background: {header_color}; color: white; padding: 14px 20px; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;">
+<span>{icon} {flujo}</span>
+<span style="font-size: 0.8rem; font-weight: 500; opacity: 0.8;">{fmt(registros)} Reg.</span>
 </div>
-"""
+<div style="padding: 24px;">
+<div style="text-align: center; margin-bottom: 24px;">
+<p style="margin: 0; color: #666; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Capacidad Total</p>
+<h2 style="margin: 0; color: #152088; font-size: 2.8rem; font-weight: 800; line-height: 1.2;">{fmt(total)}</h2>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: #444; margin-bottom: 6px;">
+<span>Capacidad Utilizada</span>
+<span style="color: #FF49A0;">{pct_utilizado:.0f}%</span>
+</div>
+<div style="background: #f0f2f8; border-radius: 10px; height: 12px; margin-bottom: 12px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+<div style="background: linear-gradient(90deg, #152088, #FF49A0); height: 100%; width: {pct_utilizado:.0f}%; border-radius: 10px; transition: width 1s ease-in-out;"></div>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #666; margin-bottom: 24px;">
+<span>Disponible: {fmt(disponible)}</span>
+<span>{pct_disponible:.0f}%</span>
+</div>
+{alert_html}
+</div>
+</div>"""
             
             if flujo == "DDC":
                 with col1:
