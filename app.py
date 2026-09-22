@@ -944,7 +944,7 @@ def crear_tabla_dinamica_lt_localidad(df: pd.DataFrame) -> pd.DataFrame:
         pivot = df_pivot.groupby(columnas_agrupacion).size().reset_index(name='Conteo')
         
     pivot = pivot.sort_values(by=['Seller', 'Region Destino', 'ID Localidad'], ascending=[True, True, True])
-    pivot['ID Seller center'] = pivot['ID Seller center'].replace("N/A", None)
+    pivot['ID Seller OMS'] = pivot['ID Seller OMS'].replace("N/A", None)
     
     return pivot
 
