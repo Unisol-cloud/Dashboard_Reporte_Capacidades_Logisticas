@@ -277,6 +277,40 @@ st.markdown("""
         font-size: 0.85rem !important;
     }
 
+
+    /* 📱 Adaptación para Teléfonos Móviles (Responsive Design) */
+    @media (max-width: 768px) {
+        /* Aumentar tamaño de botones para cumplir con estándares táctiles (fat fingers) */
+        section[data-testid="stSidebar"] button[kind="secondary"],
+        section[data-testid="stSidebar"] button[kind="primary"] {
+            min-height: 44px !important; /* Altura mínima recomendada por Apple/Google */
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            font-size: 1rem !important;
+            margin-bottom: 4px !important;
+        }
+        
+        /* Aumentar el tamaño del acordeón */
+        section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+            min-height: 48px !important;
+            font-size: 1.05rem !important;
+        }
+        
+        /* Espaciar los KPI Cards cuando se apilan en el celular */
+        div[data-testid="metric-container"] {
+            margin-bottom: 12px !important;
+            padding: 12px 16px !important;
+        }
+        div[data-testid="stMetricValue"] {
+            font-size: 1.6rem !important;
+        }
+        
+        /* Ajustar los selectores de filtros (que no queden pegados) */
+        div.stSelectbox {
+            margin-bottom: 8px !important;
+        }
+    }
+
 </style>
 
 """, unsafe_allow_html=True)
