@@ -1710,8 +1710,8 @@ elif pagina == "📦 Cota Recepcion DVH":
 
 
 
-elif pagina == "🧮 Cota Courier MKP":
-    st.title("🧮 Cota Courier MKP")
+elif pagina == "🚚 Cota Courier MKP":
+    st.title("🚚 Cota Courier MKP")
     try:
         df = obtener_cota_courier_mkp()
         
