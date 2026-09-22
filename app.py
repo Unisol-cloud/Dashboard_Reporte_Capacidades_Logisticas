@@ -1138,6 +1138,14 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
     elif es_pivot_ultima_milla:
         df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
         st.dataframe(df_mostrar, use_container_width=True)
+    elif colorear_dias:
+        def estilo_celda(val):
+            if val == "SI":
+                return 'background-color: #bcebc3; color: black'
+            elif val == "0":
+                return 'background-color: #ffcccc; color: black'
+            return ''
+        st.dataframe(df_filtrado.style.map(estilo_celda), use_container_width=True, hide_index=True)
     else:
 
         df_mostrar = df_filtrado
@@ -1721,37 +1729,36 @@ elif pagina == "⏱ Lead Time SKU VeV":
 
 
 elif pagina == "📅 Frecuencia DDC":
-
     st.title("📅 Frecuencia de Proveedores DDC")
-
     try:
-
         df = obtener_frecuencia_ddc()
-        # Normalizar nombre de columna Region si no existe explícitamente
-        if "Region" not in df.columns:
-            for col in df.columns:
-                if "regi" in col.lower() and "id" not in col.lower():
-                    df.rename(columns={col: "Region"}, inplace=True)
-                    break
         
-        # Mapear 1 a 'SI' y NaN a '0'
-        dias = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"]
-        for dia in dias:
+        # Renombrar días a formato corto
+        map_dias = {
+            "Lunes": "Lun", "Martes": "Mar", "Miercoles": "Mie", 
+            "Jueves": "Jue", "Viernes": "Vie", "Sabado": "Sab", "Domingo": "Dom"
+        }
+        df.rename(columns=map_dias, inplace=True)
+        
+        dias_cortos = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+        for dia in dias_cortos:
             if dia in df.columns:
                 df[dia] = df[dia].apply(lambda x: "SI" if pd.notnull(x) and x == 1 else "0")
+                
+        # Reordenar las columnas pedidas
+        columnas_base = ["Proveedor", "Zona Reparto", "Localidad"] + dias_cortos + ["Suma_Dias"]
+        otras_columnas = [c for c in df.columns if c not in columnas_base]
+        df = df[columnas_base + otras_columnas]
         
         mostrar_tabla_filtrada(
             df, "Frecuencia DDC", "frec_ddc",
-            columnas_filtro=["Proveedor", "Region", "Comuna"],
+            columnas_filtro=["Proveedor", "Region", "Comuna", "Suma_Dias"],
             valores_por_defecto={},
-            es_pivot_dias_dvh=True
+            colorear_dias=True
         )
 
     except Exception as e:
-
         st.error(f"Error: {e}")
-
-
 
 elif pagina == "🏪 Lead Time Sellers":
 
