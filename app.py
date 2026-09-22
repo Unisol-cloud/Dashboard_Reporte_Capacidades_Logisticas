@@ -331,11 +331,13 @@ grupos_vistas = {
 }
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
-area_seleccionada = st.sidebar.selectbox(
-    "📂 Área de Negocio", 
+st.sidebar.markdown("---")
+area_seleccionada = st.sidebar.radio(
+    "📂 **Área de Negocio**", 
     list(grupos_vistas.keys()),
     index=0
 )
+st.sidebar.markdown("---")
 
 vistas_del_area = grupos_vistas[area_seleccionada]
 
