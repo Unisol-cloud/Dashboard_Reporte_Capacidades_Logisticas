@@ -90,17 +90,31 @@ st.markdown("""
         background-color: #FF49A0 !important;
         border-color: #FF49A0 !important;
     }
-    section[data-testid="stSidebar"] .stButton button {
+    /* Boton primario (Activo o Botones de accion) */
+    section[data-testid="stSidebar"] button[kind="primary"] {
         background-color: #FF49A0 !important;
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
+        justify-content: flex-start !important;
     }
-    section[data-testid="stSidebar"] .stButton button:hover {
+    section[data-testid="stSidebar"] button[kind="primary"]:hover {
         background-color: #e03d8e !important;
-        transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(255,73,160,0.4);
+    }
+    /* Boton secundario (Inactivo en navegacion) */
+    section[data-testid="stSidebar"] button[kind="secondary"] {
+        background-color: transparent !important;
+        color: #e0e4ff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 400 !important;
+        justify-content: flex-start !important;
+    }
+    section[data-testid="stSidebar"] button[kind="secondary"]:hover {
+        color: #FF49A0 !important;
+        background-color: rgba(255,255,255,0.05) !important;
     }
     section[data-testid="stSidebar"] hr {
         border-color: rgba(255,255,255,0.15) !important;
@@ -331,24 +345,24 @@ grupos_vistas = {
 }
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
+if 'pagina_actual' not in st.session_state:
+    st.session_state.pagina_actual = "🎯 Resumen"
+
 st.sidebar.markdown("---")
-area_seleccionada = st.sidebar.radio(
-    "📂 **Área de Negocio**", 
-    list(grupos_vistas.keys()),
-    index=0
-)
-st.sidebar.markdown("---")
+for area, vistas in grupos_vistas.items():
+    st.sidebar.markdown(f"**{area}**")
+    for vista in vistas:
+        is_active = (st.session_state.pagina_actual == vista)
+        if st.sidebar.button(vista, key=vista, type="primary" if is_active else "secondary", use_container_width=True):
+            st.session_state.pagina_actual = vista
+            st.rerun()
+    st.sidebar.markdown("<div style='margin-bottom: 10px'></div>", unsafe_allow_html=True)
 
-vistas_del_area = grupos_vistas[area_seleccionada]
-
-pagina = st.sidebar.radio(
-    "Vistas Disponibles",
-    vistas_del_area
-)
+pagina = st.session_state.pagina_actual
 
 
 
-if st.sidebar.button("🔄 Refrescar Datos", use_container_width=True):
+if st.sidebar.button("🔄 Refrescar Datos", type="primary", use_container_width=True):
     st.cache_data.clear()
     st.success("Cache limpia. Recargando datos...")
     st.rerun()
