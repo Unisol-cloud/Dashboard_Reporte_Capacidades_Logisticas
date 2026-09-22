@@ -70,8 +70,13 @@ st.markdown("""
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #152088 0%, #0e1660 100%) !important;
     }
-    section[data-testid="stSidebar"] * {
+    section[data-testid="stSidebar"] .stMarkdown *,
+    section[data-testid="stSidebar"] .stText * {
         color: #ffffff !important;
+    }
+    /* Excepcion para el Selectbox: mantener colores legibles */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] * {
+        color: #000000 !important;
     }
     section[data-testid="stSidebar"] .stRadio label {
         color: #e0e4ff !important;
