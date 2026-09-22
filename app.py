@@ -17,6 +17,7 @@ import os
 
 
 import pandas as pd
+pd.set_option('styler.render.max_elements', 2000000)
 
 from io import BytesIO
 
@@ -1171,25 +1172,54 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
         df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
         st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
     elif colorear_dias:
+
         def estilo_celda(val):
+
             if val == "SI":
+
                 return 'background-color: #bcebc3; color: black'
+
             elif val == "0":
+
                 return 'background-color: #ffcccc; color: black'
+
             return ''
+
             
+
         df_display = df_filtrado.copy()
+
         if columnas_ocultas:
+
             df_display = df_display.drop(columns=[c for c in columnas_ocultas if c in df_display.columns])
+
             
+
         st.dataframe(df_display.style.map(estilo_celda), use_container_width=True, hide_index=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
+
     else:
 
-        df_mostrar = df_filtrado
+        df_mostrar = df_filtrado.copy()
 
-        st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)), hide_index=True)
+        if columnas_ocultas:
 
+            df_mostrar = df_mostrar.drop(columns=[c for c in columnas_ocultas if c in df_mostrar.columns])
 
+            
+
+        if 'Lead Time Sellers' in titulo and 'leadtime_cd' in df_mostrar.columns and not df_mostrar.empty:
+
+            st.markdown("#### 🗺️ Mapa de Calor (Lead Time CD)")
+
+            df_mostrar['leadtime_cd'] = pd.to_numeric(df_mostrar['leadtime_cd'], errors='coerce').fillna(0)
+
+            styled = df_mostrar.style.background_gradient(subset=['leadtime_cd'], cmap='RdYlGn_r', vmin=0)
+
+            st.dataframe(styled, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)), hide_index=True)
+
+        else:
+
+            st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)), hide_index=True)
 
     # Descarga (siempre descarga el DF original completo, sin filtros)
 
