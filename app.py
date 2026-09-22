@@ -1009,7 +1009,8 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
     if columnas_filtro:
 
-        cols = st.columns(len(columnas_filtro))
+        with st.expander("🔍 Filtros de Búsqueda", expanded=True):
+            cols = st.columns(len(columnas_filtro))
 
         for i, col_name in enumerate(columnas_filtro):
 
@@ -1093,7 +1094,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
         df_mostrar = crear_tabla_dinamica_cotas(df_filtrado, col_fecha, col_fila)
 
-        st.dataframe(df_mostrar, use_container_width=True, height=500)
+        st.dataframe(df_mostrar, use_container_width=True)
 
     elif es_pivot_dias_dvh and col_fila and col_dia:
 
@@ -1115,7 +1116,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
         
 
-        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True, height=500)
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True)
 
     elif es_pivot_dias and col_fila and col_dia:
         df_mostrar = crear_tabla_frecuencia_dias(df_filtrado, col_fila, col_dia)
@@ -1127,21 +1128,21 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
                 return 'background-color: #ffcccc; color: black'
             return ''
         
-        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True, height=500)
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True)
     elif es_pivot_tamano:
         df_mostrar = crear_tabla_dinamica_tamano(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True, height=500)
+        st.dataframe(df_mostrar, use_container_width=True)
     elif es_pivot_lt_localidad:
         df_mostrar = crear_tabla_dinamica_lt_localidad(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True, height=500)
+        st.dataframe(df_mostrar, use_container_width=True)
     elif es_pivot_ultima_milla:
         df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True, height=500)
+        st.dataframe(df_mostrar, use_container_width=True)
     else:
 
         df_mostrar = df_filtrado
 
-        st.dataframe(df_mostrar, use_container_width=True, height=500)
+        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
 
 
 
