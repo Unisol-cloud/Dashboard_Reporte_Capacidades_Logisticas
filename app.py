@@ -1335,6 +1335,83 @@ if pagina == "🎯 Resumen":
             'cotas_quemadas': r['cotas_quemadas']
         } for r in datos_resumen])
 
+        
+        # --- NUEVA SECCION: TOP 3 PROVEEDORES ---
+        def obtener_top_3(df_base, col_fecha):
+            if df_base.empty: return []
+            
+            df_temp = df_base.copy()
+            # 1. Filtro SOLO por fechas (ignorar filtro de proveedor para el ranking)
+            if fecha_desde <= fecha_hasta:
+                df_temp = df_temp[(df_temp[col_fecha] >= fecha_desde) & (df_temp[col_fecha] <= fecha_hasta)]
+                
+            if df_temp.empty or "Razon Social" not in df_temp.columns or "Cota Acumulada" not in df_temp.columns or "Cota" not in df_temp.columns:
+                return []
+                
+            # 2. Agrupar por Razon Social
+            agrupado = df_temp.groupby("Razon Social").agg(
+                vol_utilizado=("Cota Acumulada", "sum"),
+                vol_total=("Cota", "sum")
+            ).reset_index()
+            
+            # 3. Filtrar los que tienen volumen utilizado > 0
+            agrupado = agrupado[agrupado["vol_utilizado"] > 0]
+            
+            # 4. Ordenar y sacar Top 3
+            agrupado = agrupado.sort_values(by="vol_utilizado", ascending=False).head(3)
+            
+            # 5. Formatear salida
+            top_list = []
+            for _, r in agrupado.iterrows():
+                prov = r["Razon Social"]
+                vol_util = r["vol_utilizado"]
+                vol_tot = r["vol_total"]
+                pct = (vol_util / vol_tot * 100) if vol_tot > 0 else 0
+                if pct > 100: pct = 100
+                top_list.append({"proveedor": prov, "volumen": vol_util, "pct": pct})
+            return top_list
+
+        top_ddc = obtener_top_3(df_ddc, "Fecha Compromiso")
+        top_dvh = obtener_top_3(df_dvh, "Fecha Entrega CD")
+        top_mkp = obtener_top_3(df_mkp, "Fecha Compromiso Inicial")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #444; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;'>🏆 Top 3 Proveedores (Capacidad Utilizada)</h3>", unsafe_allow_html=True)
+        
+        t_col1, t_col2, t_col3 = st.columns(3)
+        
+        def generar_html_top(lista_top, color_acento):
+            if not lista_top:
+                return f"""<div style="background: white; border-radius: 8px; border: 1px dashed #ccc; padding: 15px; text-align: center; color: #999; font-size: 0.85rem;">Sin datos para este rango</div>"""
+            
+            html = f"""<div style="background: white; border-radius: 8px; border: 1px solid #eef0f6; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 15px;">"""
+            
+            for i, item in enumerate(lista_top):
+                p_name = str(item['proveedor'])
+                if len(p_name) > 23: p_name = p_name[:20] + "..."
+                vol_fmt = f"{int(item['volumen']):,}".replace(",", ".")
+                html += f"""<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: {'1px solid #f0f2f8' if i < len(lista_top)-1 else 'none'};">
+<div style="display: flex; align-items: center; gap: 8px;">
+<span style="background: {color_acento}; color: white; border-radius: 50%; min-width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">{i+1}</span>
+<span style="font-size: 0.85rem; font-weight: 600; color: #444;" title="{str(item['proveedor'])}">{p_name}</span>
+</div>
+<div style="text-align: right;">
+<div style="font-size: 0.9rem; font-weight: 800; color: #152088;">{vol_fmt}</div>
+<div style="font-size: 0.7rem; font-weight: 700; color: #FF49A0;">{item['pct']:.0f}% Uso</div>
+</div>
+</div>"""
+            html += "</div>"
+            return html
+
+        with t_col1:
+            st.markdown(generar_html_top(top_ddc, "#152088"), unsafe_allow_html=True)
+        with t_col2:
+            st.markdown(generar_html_top(top_dvh, "#0e1660"), unsafe_allow_html=True)
+        with t_col3:
+            st.markdown(generar_html_top(top_mkp, "#1c2a9c"), unsafe_allow_html=True)
+        
+        # --- FIN SECCION TOP 3 ---
+        
         # Boton de descarga del reporte completo
 
         st.divider()
