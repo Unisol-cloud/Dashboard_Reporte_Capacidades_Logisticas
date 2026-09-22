@@ -920,7 +920,7 @@ def crear_tabla_dinamica_lt_localidad(df: pd.DataFrame) -> pd.DataFrame:
     df_pivot = df.copy()
     
     columnas_agrupacion = [
-        'ID Seller center', 'Seller', 'Region Destino', 
+        'ID Seller OMS', 'Seller', 'Region Destino', 
         'ID Localidad', 'Localidad Destino', 'LeadTime Seller', 'LeadTime Courier'
     ]
     
@@ -930,7 +930,7 @@ def crear_tabla_dinamica_lt_localidad(df: pd.DataFrame) -> pd.DataFrame:
             return df_pivot
             
     # Llenar nulos para no perder registros en groupby (por seguridad si pandas es < 1.1)
-    df_pivot['ID Seller center'] = df_pivot['ID Seller center'].fillna("N/A")
+    df_pivot['ID Seller OMS'] = df_pivot['ID Seller OMS'].fillna("N/A")
     df_pivot['LeadTime Seller'] = pd.to_numeric(df_pivot['LeadTime Seller'], errors='coerce').fillna(0).astype(int)
     df_pivot['LeadTime Courier'] = pd.to_numeric(df_pivot['LeadTime Courier'], errors='coerce').fillna(0).astype(int)
     
