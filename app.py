@@ -58,7 +58,7 @@ import subprocess
 
 st.set_page_config(
 
-    page_title="Capacidades Logisticas",
+    page_title="Capacidades Logísticas | Hites",
 
     page_icon="📦",
 
@@ -72,7 +72,8 @@ st.set_page_config(
 
 # ============================================================
 
-# CSS Personalizado
+# CSS Corporativo Hites
+# Paleta: Azul #152088 | Fucsia #FF49A0 | Alerta #993700
 
 # ============================================================
 
@@ -80,21 +81,158 @@ st.markdown("""
 
 <style>
 
-    .block-container { padding-top: 1rem; }
+    /* ── Fuente moderna ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    .stMetric { background-color: var(--secondary-background-color); border-radius: 8px; padding: 12px; border-left: 4px solid #1f77b4; }
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif !important;
+    }
 
-    div[data-testid="stMetricValue"] { font-size: 1.6rem; color: var(--text-color); }
+    /* ── Layout general ── */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
 
-    .kpi-quemada { border-left-color: #e3000f !important; }
+    /* ── Sidebar corporativo ── */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #152088 0%, #0e1660 100%) !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #ffffff !important;
+    }
+    section[data-testid="stSidebar"] .stRadio label {
+        color: #e0e4ff !important;
+        font-size: 0.88rem;
+        padding: 2px 0;
+    }
+    section[data-testid="stSidebar"] .stRadio label:hover {
+        color: #FF49A0 !important;
+    }
+    section[data-testid="stSidebar"] [data-baseweb="radio"] input:checked + div {
+        background-color: #FF49A0 !important;
+        border-color: #FF49A0 !important;
+    }
+    section[data-testid="stSidebar"] .stButton button {
+        background-color: #FF49A0 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    section[data-testid="stSidebar"] .stButton button:hover {
+        background-color: #e03d8e !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255,73,160,0.4);
+    }
+    section[data-testid="stSidebar"] hr {
+        border-color: rgba(255,255,255,0.15) !important;
+    }
 
-    .kpi-ok { border-left-color: #2ca02c !important; }
+    /* ── KPI Cards ── */
+    div[data-testid="metric-container"] {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px !important;
+        border-left: 5px solid #152088;
+        box-shadow: 0 2px 8px rgba(21,32,136,0.10);
+        transition: box-shadow 0.2s;
+    }
+    div[data-testid="metric-container"]:hover {
+        box-shadow: 0 4px 16px rgba(21,32,136,0.18);
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #152088 !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #666 !important;
+    }
+    div[data-testid="stMetricDelta"] {
+        font-size: 0.82rem !important;
+    }
 
-    h1 { font-size: 1.6rem !important; }
+    /* ── Títulos de sección ── */
+    h1 {
+        font-size: 1.6rem !important;
+        font-weight: 700 !important;
+        color: #152088 !important;
+        padding-bottom: 0.4rem;
+        border-bottom: 3px solid #FF49A0;
+        margin-bottom: 1.2rem !important;
+    }
+    h2 {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #152088 !important;
+    }
+    h3 {
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        color: #1a2ba0 !important;
+    }
 
-    h2 { font-size: 1.3rem !important; }
+    /* ── Tablas de datos ── */
+    .stDataFrame thead tr th {
+        background-color: #152088 !important;
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 0.82rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .stDataFrame tbody tr:nth-child(even) {
+        background-color: #f0f2ff !important;
+    }
+    .stDataFrame tbody tr:hover {
+        background-color: #ffe4f2 !important;
+    }
 
-    h3 { font-size: 1.1rem !important; }
+    /* ── Tabs ── */
+    button[data-baseweb="tab"] {
+        font-weight: 600 !important;
+        color: #152088 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #FF49A0 !important;
+        border-bottom: 3px solid #FF49A0 !important;
+    }
+
+    /* ── Selectboxes y filtros ── */
+    .stSelectbox label, .stMultiSelect label {
+        font-weight: 500 !important;
+        color: #152088 !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* ── Alertas y mensajes ── */
+    .stAlert {
+        border-radius: 10px !important;
+    }
+
+    /* ── Botones generales ── */
+    .stDownloadButton button {
+        background-color: #152088 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        border: none !important;
+    }
+    .stDownloadButton button:hover {
+        background-color: #0e1660 !important;
+        box-shadow: 0 4px 12px rgba(21,32,136,0.3);
+    }
+
+    /* ── Caption / footer ── */
+    .stCaption {
+        color: #aaa !important;
+        font-size: 0.75rem !important;
+    }
 
 </style>
 
@@ -136,11 +274,11 @@ logo_path = os.path.join(os.path.dirname(__file__), "logo_hites.png")
 
 if os.path.exists(logo_path):
 
-    st.sidebar.image(logo_path, width=200)
+    st.sidebar.image(logo_path, use_container_width=True)
 
+st.sidebar.markdown("---")
 
-
-st.sidebar.title("Menu")
+st.sidebar.markdown("### 📋 Navegación")
 
 
 
@@ -148,7 +286,7 @@ st.sidebar.title("Menu")
 
 fecha_act = obtener_fecha_actualizacion()
 
-st.sidebar.caption(f"Ultima actualizacion: {fecha_act}")
+st.sidebar.markdown(f"🕐 **Datos al:** {fecha_act}")
 
 
 
@@ -190,7 +328,7 @@ pagina = st.sidebar.radio(
 
 
 
-if st.sidebar.button("🔄 Refrescar Cache", use_container_width=True):
+if st.sidebar.button("🔄 Refrescar Datos", use_container_width=True):
     st.cache_data.clear()
     st.success("Cache limpia. Recargando datos...")
     st.rerun()
