@@ -353,18 +353,51 @@ if st.sidebar.button("🔄 Refrescar Datos", use_container_width=True):
 import re
 
 def generar_excel(dataframes: dict) -> bytes:
-    """Genera un archivo Excel con multiples hojas."""
+    """Genera un archivo Excel con múltiples hojas y formato corporativo Hites."""
+    from openpyxl.styles import PatternFill, Font, Alignment
+    from openpyxl.utils import get_column_letter
+    
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         for nombre_hoja, df in dataframes.items():
-            # Limpiar caracteres prohibidos en hojas de Excel (\, /, ?, *, [, ], :)
+            # Limpiar caracteres prohibidos en hojas de Excel
             nombre_limpio = re.sub(r'[\\/\?\*\[\]\:]', '_', nombre_hoja)
-            nombre_limpio = nombre_limpio[:31]  # Excel limita a 31 chars
+            nombre_limpio = nombre_limpio[:31]
             df.to_excel(writer, sheet_name=nombre_limpio, index=False)
+            
+            # Formatear la hoja
+            worksheet = writer.sheets[nombre_limpio]
+            
+            # Colores corporativos
+            header_fill = PatternFill(start_color='152088', end_color='152088', fill_type='solid')
+            header_font = Font(color='FFFFFF', bold=True)
+            
+            # Cabeceras
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Congelar paneles y autofiltro
+            worksheet.freeze_panes = 'A2'
+            max_col_letter = get_column_letter(worksheet.max_column)
+            worksheet.auto_filter.ref = f"A1:{max_col_letter}{worksheet.max_row}"
+            
+            # Auto-ajuste de ancho de columnas
+            for col in worksheet.columns:
+                max_length = 0
+                column_letter = col[0].column_letter
+                for cell in col:
+                    try:
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                    except:
+                        pass
+                # Ancho mínimo de 10, máximo de 50
+                adjusted_width = min(max(max_length + 2, 10), 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+                
     return output.getvalue()
-
-
-
 
 
 def boton_descarga(df: pd.DataFrame, nombre: str, key: str):
