@@ -1091,9 +1091,34 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
     # Tabla
 
     if es_pivot_cotas and col_fecha and col_fila:
-
+        # INYECCION DE GRAFICO DE TENDENCIA (FASE 1 MODERNIZACION)
+        df_chart = df_filtrado.copy()
+        if not df_chart.empty and 'Cota' in df_chart.columns and 'Cota Acumulada' in df_chart.columns:
+            try:
+                df_chart['Cota'] = pd.to_numeric(df_chart['Cota'], errors='coerce').fillna(0)
+                df_chart['Cota Acumulada'] = pd.to_numeric(df_chart['Cota Acumulada'], errors='coerce').fillna(0)
+                df_chart['Libre'] = df_chart['Cota'] - df_chart['Cota Acumulada']
+                df_chart.loc[df_chart['Libre'] < 0, 'Libre'] = 0
+                
+                # Agrupar por fecha
+                chart_data = df_chart.groupby(col_fecha)[['Cota Acumulada', 'Libre']].sum().reset_index()
+                chart_data.rename(columns={'Cota Acumulada': 'Consumido'}, inplace=True)
+                
+                # Ordenar por fecha cronologicamente
+                chart_data[col_fecha] = pd.to_datetime(chart_data[col_fecha], errors='coerce')
+                chart_data = chart_data.dropna(subset=[col_fecha]).sort_values(by=col_fecha)
+                
+                # Convertir la fecha a string formateado para el eje X
+                chart_data[col_fecha] = chart_data[col_fecha].dt.strftime('%d-%m-%Y')
+                chart_data.set_index(col_fecha, inplace=True)
+                
+                st.markdown(f"#### 📊 Evolución de Capacidad ({titulo})")
+                st.bar_chart(chart_data, color=["#FF49A0", "#152088"])
+                st.markdown("<br>", unsafe_allow_html=True)
+            except Exception as e:
+                pass # Fallback silencioso si falla la grafica
+                
         df_mostrar = crear_tabla_dinamica_cotas(df_filtrado, col_fecha, col_fila)
-
         st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
 
     elif es_pivot_dias_dvh and col_fila and col_dia:
@@ -1134,7 +1159,14 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
         st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
     elif es_pivot_lt_localidad:
         df_mostrar = crear_tabla_dinamica_lt_localidad(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
+        if not df_mostrar.empty and 'LeadTime Seller' in df_mostrar.columns and 'LeadTime Courier' in df_mostrar.columns:
+            st.markdown("#### 🗺️ Mapa de Calor (Lead Times)")
+            styled_df = df_mostrar.style.background_gradient(
+                subset=['LeadTime Seller', 'LeadTime Courier'], cmap='RdYlGn_r', vmin=0
+            )
+            st.dataframe(styled_df, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
+        else:
+            st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
     elif es_pivot_ultima_milla:
         df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
         st.dataframe(df_mostrar, use_container_width=True, key=f"tbl_{key_prefix}_" + str(hash(titulo)))
