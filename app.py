@@ -1211,26 +1211,31 @@ if pagina == "🎯 Resumen":
         
         # 4. Interfaz de Filtros Globales
         with st.expander("🔍 Filtros Globales de Resumen", expanded=True):
-            f_col1, f_col2 = st.columns(2)
+            f_col1, f_col2, f_col3 = st.columns([1, 1, 2])
             with f_col1:
-                filtro_fechas = st.date_input("Rango de Fechas", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+                fecha_desde = st.date_input("📅 Fecha Desde", value=min_date, min_value=min_date, max_value=max_date)
             with f_col2:
-                filtro_proveedores = st.multiselect("Razón Social / Proveedor (Opcional)", options=proveedores, placeholder="Todos los proveedores")
+                fecha_hasta = st.date_input("📅 Fecha Hasta", value=max_date, min_value=min_date, max_value=max_date)
+            with f_col3:
+                filtro_proveedores = st.multiselect("🏢 Razón Social / Proveedor (Opcional)", options=proveedores, placeholder="Todos los proveedores")
+                
+        # Validar consistencia de fechas
+        if fecha_desde > fecha_hasta:
+            st.warning("⚠️ La 'Fecha Desde' no puede ser mayor a 'Fecha Hasta'. Se mostrarán los datos ignorando el filtro de fechas.")
                 
         # 5. Aplicar filtros a los DataFrames
         def filtrar_df(df_f, col_fecha):
             if df_f.empty: return df_f
             res = df_f.copy()
-            if isinstance(filtro_fechas, tuple) or isinstance(filtro_fechas, list):
-                if len(filtro_fechas) == 2:
-                    res = res[(res[col_fecha] >= filtro_fechas[0]) & (res[col_fecha] <= filtro_fechas[1])]
-                elif len(filtro_fechas) == 1:
-                    res = res[res[col_fecha] == filtro_fechas[0]]
-            elif filtro_fechas:
-                res = res[res[col_fecha] == filtro_fechas]
+            
+            # Filtro Fechas (solo si son consistentes)
+            if fecha_desde <= fecha_hasta:
+                res = res[(res[col_fecha] >= fecha_desde) & (res[col_fecha] <= fecha_hasta)]
                 
+            # Filtro Proveedores
             if filtro_proveedores:
                 res = res[res["Razon Social"].isin(filtro_proveedores)]
+                
             return res
 
         df_ddc_f = filtrar_df(df_ddc, "Fecha Compromiso")
