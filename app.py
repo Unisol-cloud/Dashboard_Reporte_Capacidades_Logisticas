@@ -1094,7 +1094,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
         df_mostrar = crear_tabla_dinamica_cotas(df_filtrado, col_fecha, col_fila)
 
-        st.dataframe(df_mostrar, use_container_width=True)
+        st.dataframe(df_mostrar, use_container_width=False)
 
     elif es_pivot_dias_dvh and col_fila and col_dia:
 
@@ -1116,7 +1116,7 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
 
         
 
-        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True)
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=False)
 
     elif es_pivot_dias and col_fila and col_dia:
         df_mostrar = crear_tabla_frecuencia_dias(df_filtrado, col_fila, col_dia)
@@ -1128,16 +1128,16 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
                 return 'background-color: #ffcccc; color: black'
             return ''
         
-        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=True)
+        st.dataframe(df_mostrar.style.map(estilo_celda), use_container_width=False)
     elif es_pivot_tamano:
         df_mostrar = crear_tabla_dinamica_tamano(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True)
+        st.dataframe(df_mostrar, use_container_width=False)
     elif es_pivot_lt_localidad:
         df_mostrar = crear_tabla_dinamica_lt_localidad(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True)
+        st.dataframe(df_mostrar, use_container_width=False)
     elif es_pivot_ultima_milla:
         df_mostrar = crear_tabla_dinamica_ultima_milla(df_filtrado)
-        st.dataframe(df_mostrar, use_container_width=True)
+        st.dataframe(df_mostrar, use_container_width=False)
     elif colorear_dias:
         def estilo_celda(val):
             if val == "SI":
@@ -1150,12 +1150,12 @@ def mostrar_tabla_filtrada(df: pd.DataFrame, titulo: str, key_prefix: str,
         if columnas_ocultas:
             df_display = df_display.drop(columns=[c for c in columnas_ocultas if c in df_display.columns])
             
-        st.dataframe(df_display.style.map(estilo_celda), use_container_width=True, hide_index=True)
+        st.dataframe(df_display.style.map(estilo_celda), use_container_width=False, hide_index=True)
     else:
 
         df_mostrar = df_filtrado
 
-        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
+        st.dataframe(df_mostrar, use_container_width=False, hide_index=True)
 
 
 
@@ -1492,7 +1492,7 @@ if pagina == "🎯 Resumen":
 
                 ]
 
-                st.dataframe(quemadas_ddc, use_container_width=True)
+                st.dataframe(quemadas_ddc, use_container_width=False)
 
 
 
@@ -1512,7 +1512,7 @@ if pagina == "🎯 Resumen":
 
                 ]
 
-                st.dataframe(quemadas_dvh, use_container_width=True)
+                st.dataframe(quemadas_dvh, use_container_width=False)
 
 
 
@@ -1532,7 +1532,7 @@ if pagina == "🎯 Resumen":
 
                 ]
 
-                st.dataframe(quemadas_mkp, use_container_width=True)
+                st.dataframe(quemadas_mkp, use_container_width=False)
 
 
 
@@ -1782,7 +1782,7 @@ elif pagina == "⏱ Lead Time SKU VeV":
                 pivot_1['Promedio LT SKU'] = pivot_1['Promedio LT SKU'].round(1)
                 pivot_1 = pivot_1.sort_values('Cantidad de SKUs', ascending=False)
                 
-                st.dataframe(pivot_1, use_container_width=True, height=500)
+                st.dataframe(pivot_1, use_container_width=False, height=500)
                 boton_descarga(pivot_1, "LT_Promedio_Proveedor", "dl_lt_prom_prov")
             else:
                 st.warning("No hay datos que coincidan con los filtros para esta tabla.")
@@ -1814,7 +1814,7 @@ elif pagina == "⏱ Lead Time SKU VeV":
                 pivot_2['Promedio LT SKU'] = pivot_2['Promedio LT SKU'].round(1)
                 pivot_2 = pivot_2.sort_values('Cantidad de SKUs', ascending=False)
                 
-                st.dataframe(pivot_2, use_container_width=True, height=500)
+                st.dataframe(pivot_2, use_container_width=False, height=500)
                 boton_descarga(pivot_2, "LT_Mayor_35_Dias", "dl_lt_35_dias")
             else:
                 st.warning("No hay datos que coincidan con los filtros para esta tabla (¡Ninguno superó los 35 días!).")
@@ -1846,7 +1846,7 @@ elif pagina == "⏱ Lead Time SKU VeV":
                 pivot_3['Promedio LT SKU'] = pivot_3['Promedio LT SKU'].round(1)
                 pivot_3 = pivot_3.sort_values('Cantidad de SKUs', ascending=False)
                 
-                st.dataframe(pivot_3, use_container_width=True, height=500)
+                st.dataframe(pivot_3, use_container_width=False, height=500)
                 boton_descarga(pivot_3, "Prov_Sin_Stock", "dl_prov_sin_stock")
             else:
                 st.warning("No hay datos que coincidan con los filtros para esta tabla.")
@@ -1877,7 +1877,7 @@ elif pagina == "⏱ Lead Time SKU VeV":
                 pivot_4['Promedio LT SKU'] = pivot_4['Promedio LT SKU'].round(1)
                 pivot_4 = pivot_4.sort_values('Cantidad de SKUs', ascending=False)
                 
-                st.dataframe(pivot_4, use_container_width=True, height=500)
+                st.dataframe(pivot_4, use_container_width=False, height=500)
                 boton_descarga(pivot_4, "Inactivos_Con_Stock", "dl_inactivos_con_stock")
             else:
                 st.warning("No hay datos que coincidan con los filtros para esta tabla.")
