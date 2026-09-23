@@ -392,9 +392,7 @@ if os.path.exists(logo_path):
 
     st.sidebar.image(logo_path, use_container_width=True)
 
-st.sidebar.markdown("---")
-
-st.sidebar.markdown("### 📋 Navegación")
+st.sidebar.markdown("**📋 Navegación**")
 
 
 
@@ -431,11 +429,9 @@ grupos_vistas = {
     ]
 }
 
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
 if 'pagina_actual' not in st.session_state:
     st.session_state.pagina_actual = "🎯 Resumen"
 
-st.sidebar.markdown("---")
 for area, vistas in grupos_vistas.items():
     # Expandir solo si la pagina actual pertenece a este grupo
     is_expanded = (st.session_state.pagina_actual in vistas)
