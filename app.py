@@ -1248,7 +1248,6 @@ if pagina == "🎯 Resumen":
         df_mkp = obtener_cotas_mkp()
         
         # 2. Preparar fechas
-        import datetime
         for df_target, col in [(df_ddc, "Fecha Compromiso"), (df_dvh, "Fecha Entrega CD"), (df_mkp, "Fecha Compromiso Inicial")]:
             if not df_target.empty and col in df_target.columns:
                 df_target[col] = pd.to_datetime(df_target[col]).dt.date
@@ -1268,14 +1267,14 @@ if pagina == "🎯 Resumen":
             df_mkp["Fecha Compromiso Inicial"] if not df_mkp.empty and "Fecha Compromiso Inicial" in df_mkp.columns else pd.Series(dtype='object')
         ]).dropna()
         
-        min_date = todas_fechas.min() if not todas_fechas.empty else datetime.date.today()
-        max_date = todas_fechas.max() if not todas_fechas.empty else datetime.date.today()
+        min_date = todas_fechas.min() if not todas_fechas.empty else datetime.today().date()
+        max_date = todas_fechas.max() if not todas_fechas.empty else datetime.today().date()
         
         # 4. Interfaz de Filtros Globales
         with st.expander("🔍 Filtros Globales de Resumen", expanded=True):
             f_col1, f_col2, f_col3 = st.columns([1, 1, 2])
             
-            hoy = datetime.date.today()
+            hoy = datetime.today().date()
             # Asegurar que 'hoy' este dentro de los limites permitidos para evitar errores de Streamlit
             val_defecto = max(min_date, min(hoy, max_date))
             
